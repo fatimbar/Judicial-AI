@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Judicial AI Evaluation Framework — MCDA</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fffaf0;
+  --bg-2:#fff3d6;
+  --ink:#1a1530;
+  --ink-soft:#4a3f6b;
+  --primary:#ff3d68;
+  --primary-2:#ff6b35;
+  --accent:#00b8a9;
+  --accent-2:#7c3aed;
+  --yellow:#ffc93c;
+  --rule:#1a1530;
+  --muted:#6b6080;
+  --shadow: 6px 6px 0 var(--ink);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'DM Sans',sans-serif;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+body{
+  background-image:
+    radial-gradient(circle at 15% 8%, rgba(255,61,104,.10) 0%, transparent 35%),
+    radial-gradient(circle at 85% 25%, rgba(0,184,169,.12) 0%, transparent 35%),
+    radial-gradient(circle at 50% 90%, rgba(124,58,237,.08) 0%, transparent 40%);
+  min-height:100vh;
+}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+
+header{
+  border:3px solid var(--ink);
+  background:var(--yellow);
+  padding:40px 32px;
+  margin-bottom:40px;
+  box-shadow:var(--shadow);
+  position:relative;
+}
+header::after{
+  content:"MCDA";
+  position:absolute;
+  top:-18px;right:32px;
+  background:var(--primary);
+  color:#fff;
+  padding:6px 16px;
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:3px;
+  border:3px solid var(--ink);
+  box-shadow:3px 3px 0 var(--ink);
+}
+.eyebrow{
+  font-size:12px;letter-spacing:4px;
+  text-transform:uppercase;
+  font-weight:600;
+  margin-bottom:14px;
+  display:inline-block;
+  background:var(--ink);color:var(--bg);
+  padding:6px 14px;
+}
+h1{
+  font-family:'Fraunces',serif;
+  font-size:clamp(34px,5vw,56px);
+  font-weight:900;
+  line-height:1.05;
+  margin-bottom:14px;
+  letter-spacing:-1px;
+}
+h1 em{
+  font-style:italic;
+  color:var(--primary);
+  font-weight:900;
+}
+.subtitle{
+  font-size:16px;
+  max-width:720px;
+  color:var(--ink-soft);
+  font-weight:500;
+}
+
+.country-panel{
+  background:#fff;
+  border:3px solid var(--ink);
+  padding:32px;
+  margin-bottom:40px;
+  box-shadow:var(--shadow);
+}
+.country-panel label{
+  display:block;
+  font-family:'Fraunces',serif;
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:14px;
+}
+.country-panel input{
+  width:100%;
+  padding:16px 20px;
+  border:3px solid var(--ink);
+  font-family:'DM Sans',sans-serif;
+  font-size:18px;
+  background:var(--bg);
+  color:var(--ink);
+  font-weight:500;
+}
+.country-panel input:focus{
+  outline:none;
+  background:var(--bg-2);
+  box-shadow:4px 4px 0 var(--primary);
+}
+.country-panel .hint{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:10px;
+}
+
+.progress-bar{
+  position:sticky;top:0;z-index:50;
+  background:var(--ink);
+  color:var(--bg);
+  margin:0 -24px 36px;
+  padding:14px 24px;
+  display:flex;align-items:center;gap:16px;
+  font-size:13px;font-weight:600;
+  border-bottom:3px solid var(--primary);
+}
+.progress-track{
+  flex:1;height:10px;background:rgba(255,255,255,.15);
+  position:relative;border:1px solid rgba(255,255,255,.3);
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--primary),var(--yellow),var(--accent));
+  width:0%;transition:width .4s ease;
+}
+.progress-text{white-space:nowrap;letter-spacing:1px}
+
+.category{
+  margin-bottom:40px;
+  border:3px solid var(--ink);
+  background:#fff;
+  box-shadow:var(--shadow);
+}
+.cat-header{
+  padding:24px 32px;
+  border-bottom:3px solid var(--ink);
+  display:flex;align-items:center;gap:20px;
+}
+.cat-header.c1{background:#ffe5ec}
+.cat-header.c2{background:#e0f7f4}
+.cat-header.c3{background:#f3e8ff}
+.cat-header.c4{background:#fff4cc}
+.cat-badge{
+  background:var(--ink);
+  color:var(--bg);
+  width:54px;height:54px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;
+  font-size:26px;font-weight:900;
+  flex-shrink:0;
+}
+.cat-num{
+  font-size:11px;letter-spacing:3px;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--ink-soft);
+  margin-bottom:4px;
+}
+.cat-title{
+  font-family:'Fraunces',serif;
+  font-size:26px;font-weight:700;
+  line-height:1.2;
+}
+
+.criterion{
+  padding:32px;
+  border-bottom:2px dashed var(--ink);
+}
+.criterion:last-child{border-bottom:none}
+.crit-title{
+  font-family:'Fraunces',serif;
+  font-size:20px;font-weight:700;
+  margin-bottom:6px;
+  display:flex;align-items:baseline;gap:12px;
+  flex-wrap:wrap;
+}
+.crit-num{
+  background:var(--primary);
+  color:#fff;
+  padding:3px 10px;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  font-weight:700;
+}
+.crit-sub{
+  color:var(--ink-soft);
+  font-weight:500;
+  font-style:italic;
+}
+.crit-hint{
+  color:var(--muted);
+  font-size:13px;
+  margin-bottom:18px;
+}
+
+.scores{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+.score-opt{
+  border:2px solid var(--ink);
+  background:#fff;
+  padding:14px 12px;
+  cursor:pointer;
+  text-align:left;
+  font-family:inherit;
+  font-size:12.5px;
+  color:var(--ink);
+  transition:transform .15s, box-shadow .15s, background .15s;
+  line-height:1.5;
+  font-weight:500;
+}
+.score-opt:hover{
+  transform:translate(-2px,-2px);
+  box-shadow:4px 4px 0 var(--ink);
+}
+.score-opt .label{
+  font-family:'Fraunces',serif;
+  font-weight:900;
+  font-size:18px;
+  margin-bottom:8px;
+  padding:2px 8px;
+  display:inline-block;
+}
+.score-opt[data-score="10"] .label{background:#c6f6d5;color:#1a5d3a}
+.score-opt[data-score="8"]  .label{background:#d6f0a8;color:#3d5016}
+.score-opt[data-score="6"]  .label{background:#fff4cc;color:#7a5c00}
+.score-opt[data-score="4"]  .label{background:#ffd5b8;color:#8a3a00}
+.score-opt[data-score="2"]  .label{background:#ffd0db;color:#8a0e2a}
+
+.score-opt.selected{
+  background:var(--ink);
+  color:var(--bg);
+  transform:translate(-2px,-2px);
+  box-shadow:4px 4px 0 var(--primary);
+}
+.score-opt.selected .label{
+  background:var(--primary);
+  color:#fff;
+}
+
+.notes-wrap{margin-top:18px}
+.notes-wrap label{
+  display:block;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin-bottom:8px;
+}
+.notes-wrap textarea{
+  width:100%;
+  min-height:70px;
+  padding:12px 14px;
+  border:2px solid var(--ink);
+  background:var(--bg);
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  color:var(--ink);
+  resize:vertical;
+  line-height:1.5;
+}
+.notes-wrap textarea:focus{
+  outline:none;
+  background:#fff;
+  box-shadow:3px 3px 0 var(--accent);
+}
+
+@media(max-width:768px){
+  .scores{grid-template-columns:1fr}
+  .wrap{padding:24px 16px 60px}
+  .criterion{padding:22px 18px}
+  .cat-header{padding:20px}
+  header{padding:28px 22px}
+}
+
+.results{
+  margin-top:60px;
+  border:3px solid var(--ink);
+  background:#fff;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.results-header{
+  background:var(--ink);
+  color:var(--bg);
+  padding:32px;
+  text-align:center;
+}
+.results-header h2{
+  font-family:'Fraunces',serif;
+  font-size:32px;
+  font-weight:900;
+  margin-bottom:6px;
+}
+.results-country{
+  font-size:14px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--yellow);
+  font-weight:600;
+}
+.results-body{padding:36px 32px}
+
+.scenario-tabs{
+  display:flex;gap:0;
+  margin-bottom:30px;
+  border:3px solid var(--ink);
+}
+.scenario-tabs button{
+  flex:1;
+  padding:16px 14px;
+  background:#fff;
+  border:none;
+  border-left:3px solid var(--ink);
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  color:var(--ink);
+  transition:background .15s;
+}
+.scenario-tabs button:first-child{border-left:none}
+.scenario-tabs button:hover{background:var(--bg-2)}
+.scenario-tabs button.active{
+  background:var(--primary);
+  color:#fff;
+}
+.score-display{
+  text-align:center;
+  background:linear-gradient(135deg,var(--yellow) 0%,var(--primary-2) 100%);
+  border:3px solid var(--ink);
+  padding:30px;
+  margin-bottom:24px;
+}
+.score-number{
+  font-family:'Fraunces',serif;
+  font-size:88px;
+  font-weight:900;
+  line-height:1;
+  color:var(--ink);
+}
+.score-out-of{font-size:28px;color:var(--ink-soft);font-weight:700}
+.score-label{
+  font-size:18px;
+  font-weight:700;
+  margin-top:10px;
+  color:var(--ink);
+}
+.scenario-desc{
+  background:var(--bg-2);
+  border:2px solid var(--ink);
+  padding:16px 20px;
+  font-size:14px;
+  color:var(--ink);
+  margin-bottom:30px;
+  font-weight:500;
+}
+
+.breakdown{margin-top:24px}
+.breakdown h3{
+  font-family:'Fraunces',serif;
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:18px;
+  padding-bottom:10px;
+  border-bottom:3px solid var(--ink);
+}
+.bd-row{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 0;
+  border-bottom:1px dashed var(--ink);
+  font-size:14px;
+}
+.bd-name{flex:1.2;font-weight:600}
+.bd-name span{color:var(--muted);font-weight:500;font-size:12px}
+.bd-bar{
+  flex:2;height:14px;background:var(--bg-2);
+  border:2px solid var(--ink);position:relative;
+}
+.bd-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--accent),var(--primary));
+}
+.bd-val{
+  width:54px;text-align:right;
+  font-weight:700;
+  font-family:'Fraunces',serif;
+  font-size:18px;
+}
+
+.actions{
+  display:flex;gap:12px;
+  margin-top:32px;
+  flex-wrap:wrap;
+}
+.btn{
+  padding:14px 28px;
+  border:3px solid var(--ink);
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  transition:transform .15s, box-shadow .15s;
+}
+.btn:hover{
+  transform:translate(-2px,-2px);
+  box-shadow:4px 4px 0 var(--ink);
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-secondary{background:var(--accent);color:#fff}
+.btn-ghost{background:#fff;color:var(--ink)}
+
+footer{
+  text-align:center;margin-top:40px;
+  font-size:11px;color:var(--muted);
+  letter-spacing:3px;
+  text-transform:uppercase;
+  font-weight:600;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Multi-Criteria Decision Analysis</span>
+  <h1>Judicial AI <em>Evaluation</em> Framework</h1>
+  <p class="subtitle">An interactive assessment built on MCDA methodology — score 22 sub-indicators across 9 criteria, document your evidence, and explore results under three weighting scenarios.</p>
+</header>
+
+<div class="country-panel">
+  <label for="countryInput">Jurisdiction Under Assessment</label>
+  <input type="text" id="countryInput" placeholder="e.g. Singapore, United States (COMPAS), Argentina (AymurAI)…" />
+  <p class="hint">Enter the country, jurisdiction, or specific judicial AI system you are evaluating. This will appear on the final report.</p>
+</div>
+
+<div class="progress-bar">
+  <span class="progress-text">PROGRESS</span>
+  <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
+  <span class="progress-text" id="ptext">0 / 22</span>
+</div>
+
+<div id="form"></div>
+
+<div class="results" id="results" style="display:none">
+  <div class="results-header">
+    <h2>Assessment Results</h2>
+    <div class="results-country" id="resCountry">—</div>
+  </div>
+  <div class="results-body">
+
+    <div class="scenario-tabs">
+      <button data-s="A" class="active">Scenario A · Equal Weights</button>
+      <button data-s="B">Scenario B · Rights-Prioritising</button>
+      <button data-s="C">Scenario C · Effectiveness</button>
+    </div>
+
+    <div class="scenario-desc" id="sdesc"></div>
+
+    <div class="score-display">
+      <div><span class="score-number" id="finalScore">0.0</span><span class="score-out-of"> / 10</span></div>
+      <div class="score-label" id="scoreLabel">—</div>
+    </div>
+
+    <div class="breakdown">
+      <h3>Breakdown by Criterion</h3>
+      <div id="bdList"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="exportReport()">Export Report (.txt)</button>
+      <button class="btn btn-secondary" onclick="window.print()">Print / Save PDF</button>
+      <button class="btn btn-ghost" onclick="resetAll()">Reset Assessment</button>
+    </div>
+  </div>
+</div>
+
+<footer>FATI · YORK LAW SCHOOL · MCDA FRAMEWORK</footer>
+</div>
+
+<script>
+const data = [
+  {cat:"Political and Institutional Environment", num:"Category One", colorClass:"c1", criteria:[
+    {id:1, name:"Political Will & Institutional Readiness", subs:[
+      {name:"Political Support & Strategy", opts:[
+        "Official adoption at highest level; clear national strategy; global leadership vision; massive dedicated budgets",
+        "Clear government support; plans for gradual development; reasonable budgets allocated",
+        "Cautious/positive stance; preliminary plans under study; limited budgets",
+        "Extreme caution/hesitation; low priority; negligible investment",
+        "Explicit opposition/rejection; no announced plans; no funding provided"
+      ]},
+      {name:"Agreement Between Executive & Judicial Branches", opts:[
+        "Full alignment and collaboration between authorities; joint initiatives",
+        "Medium agreement; cooperative but with some divergence",
+        "Limited agreement; occasional coordination",
+        "Visible differences between authorities on AI adoption",
+        "Open disagreement or conflict between branches"
+      ]},
+      {name:"Urgency & Commitment", opts:[
+        "AI and innovation seen as urgent national priority in official discourse",
+        "Acknowledged as important need",
+        "Mentioned but not prioritised",
+        "Preference for status quo",
+        "Active resistance or fear-driven discourse"
+      ]},
+      {name:"Digital Transformation Budget Ratio to GDP", opts:[
+        "Massive, dedicated budgets; multi-year funding plans",
+        "Reasonable budgets allocated; medium-term funding commitments",
+        "Limited budgets; short-term or unclear funding",
+        "Negligible investments; intermittent or inconsistent funding",
+        "Total lack of resources; no actual funding"
+      ]}
+    ]}
+  ]},
+  {cat:"Legal and Rights Framework", num:"Category Two", colorClass:"c2", criteria:[
+    {id:2, name:"Legal & Regulatory Framework", subs:[
+      {name:"Legislation Scope", opts:[
+        "Comprehensive/detailed laws; risk classification system",
+        "Clear but incomplete framework; general usage rules",
+        "Very general rules; policies under development",
+        "Near-total absence of regulation; significant gaps",
+        "Total absence of legal framework"
+      ]},
+      {name:"Oversight & Standards", opts:[
+        "Clear accreditation standards; defined oversight mechanisms",
+        "Oversight mechanisms exist but are limited",
+        "Weak oversight; reliance on non-specialized laws",
+        "No clear oversight mechanisms",
+        "Regulatory chaos; unclear responsibilities"
+      ]}
+    ]},
+    {id:3, name:"Fundamental Rights of Litigants Protection", subs:[
+      {name:"Fair Trial & Remedy", opts:[
+        "Explicit guarantees; clear appeal mechanisms; right to human explanation",
+        "Reasonable guarantees; limited appeal mechanisms",
+        "General/non-specific guarantees; unclear appeal paths",
+        "Weak guarantees; absence of challenge mechanisms",
+        "Almost no safeguards; documented violations"
+      ]},
+      {name:"Privacy & Anti-Bias", opts:[
+        "Strong privacy/data protection; robust anti-bias safeguards",
+        "Good privacy protection; some anti-bias measures",
+        "Limited privacy; bias concerns without remediation",
+        "Serious violation concerns; weak data protection",
+        "Unregulated and unmonitored usage"
+      ]},
+      {name:"Human Supervision", opts:[
+        "Mandatory independent judicial review",
+        "Human supervision in critical decisions",
+        "Insufficient human supervision",
+        "Reliance on automated logic",
+        "Total automation without oversight"
+      ]}
+    ]},
+    {id:4, name:"Transparency", subs:[
+      {name:"Technical Disclosure", opts:[
+        "Accessible algorithms/source code; detailed documentation",
+        "Partial technical disclosure; reasonable documentation",
+        "General info only; very limited documentation",
+        "Extremely scarce info; high process ambiguity",
+        "Total secrecy; non-disclosure of details"
+      ]},
+      {name:"Public & Research Access", opts:[
+        "Open performance data; full access for researchers",
+        "Some data available to researchers; general explanations",
+        "Difficulty accessing technical details",
+        "Data not published; extreme difficulty in access",
+        "Rejection of information requests"
+      ]}
+    ]}
+  ]},
+  {cat:"Implementation and Capacity", num:"Category Three", colorClass:"c3", criteria:[
+    {id:5, name:"Technical Maturity", subs:[
+      {name:"Technological Sophistication", opts:[
+        "Advanced AI (NLP, ML, Deep Learning); complex systems",
+        "Good techniques (basic ML/NLP); medium complexity",
+        "Relatively simple technologies; limited complexity",
+        "Primitive technologies; simple systems",
+        "Experimental phase; immature technologies"
+      ]},
+      {name:"Reliability & Integration", opts:[
+        "High analytical power; seamless integration; high reliability",
+        "Reasonable analytics; partial integration",
+        "Basic capabilities; varying performance",
+        "Significant integration difficulties; poor performance",
+        "Frequent failures; not ready for practical use"
+      ]}
+    ]},
+    {id:6, name:"Implementation", subs:[
+      {name:"Operational Status", opts:[
+        "Multiple systems fully operational; widespread, common use",
+        "Specific applications operational; successful pilot programs",
+        "Limited pilot projects; intermittent/occasional use",
+        "Study and planning phase; early-stage pilots",
+        "No implementation whatsoever; theoretical phase only"
+      ]},
+      {name:"Scope & Scaling", opts:[
+        "Coverage across multiple sectors; continuous expansion",
+        "Use in designated sectors; clear scaling plans",
+        "Implementation in a few courts; preliminary results only",
+        "No tangible actual use; unclear timelines",
+        "No clear plans for the future"
+      ]},
+      {name:"Usage Data", opts:[
+        "Clear data available on actual usage",
+        "Data available from pilots",
+        "Limited performance data",
+        "Data not tracked/available",
+        "Total absence of data"
+      ]}
+    ]},
+    {id:7, name:"Training & Capacity Building", subs:[
+      {name:"Program Scope", opts:[
+        "Mandatory for all staff; comprehensive and continuous",
+        "Regular programs; most relevant staff trained",
+        "Limited programs; selective or elective training",
+        "Minimal training; non-systematic programs",
+        "Near-total absence of training"
+      ]},
+      {name:"Resources & Certification", opts:[
+        "Accredited certifications; strong academic partnerships",
+        "Specialized courses available; reasonable skill updates",
+        "Basic courses only; irregular updates",
+        "Reliance on self-learning; very limited resources",
+        "Lack of interest in development"
+      ]}
+    ]}
+  ]},
+  {cat:"Outcomes and Justice", num:"Category Four", colorClass:"c4", criteria:[
+    {id:8, name:"Actual Impact", subs:[
+      {name:"Efficiency & Productivity", opts:[
+        "Documented efficiency gains; significant reduction in times",
+        "Noticeable improvement; average reduction in times",
+        "Slight improvement; limited impact on timelines",
+        "Minimal impact; no tangible improvement",
+        "Negative impact; additional complexities"
+      ]},
+      {name:"User & Stakeholder Satisfaction", opts:[
+        "High user satisfaction; cost reduction; statistical success",
+        "Good user satisfaction; some positive supporting data",
+        "Mixed feedback; inconclusive results",
+        "Significant user complaints; disappointing results",
+        "Failed goals; strong user resistance"
+      ]}
+    ]},
+    {id:9, name:"Equality & Justice", subs:[
+      {name:"AI-Driven Access to Justice", opts:[
+        "AI tools designed explicitly to widen access (translation, self-help for unrepresented litigants); non-digital alternatives maintained",
+        "Some AI tools target access gaps; traditional alternatives available",
+        "AI tools available but not targeting underserved groups; no awareness of digital divide risk",
+        "AI tools accessible only to well-resourced parties; risk of widening justice gap",
+        "AI use increases inequality; no alternatives; paid-only tools advantage one side"
+      ]},
+      {name:"Stakeholder Engagement in AI Design", opts:[
+        "Systematic, documented involvement of judges, lawyers, academics, civil society; independent oversight",
+        "Regular consultations with most stakeholders; some independent oversight mechanisms",
+        "Limited consultations (judges/lawyers only); no involvement of vulnerable groups; internal oversight only",
+        "Top-down decisions without meaningful consultation; no independent oversight",
+        "No stakeholder engagement; AI systems imposed without any consultation"
+      ]},
+      {name:"Bias Monitoring & Equity Outcomes", opts:[
+        "Systematic, regular monitoring across gender, race, socioeconomic status; public bias reports and effective correction mechanisms",
+        "Periodic monitoring of some variables; internal reports and some correction mechanisms",
+        "Limited or irregular monitoring; problem acknowledged but no clear mechanisms",
+        "No systematic monitoring; belief of neutrality and emerging evidence of bias unaddressed",
+        "No monitoring or concern; documented bias; denial of problem"
+      ]}
+    ]}
+  ]}
+];
+
+const weights = {
+  A: {1:11.1, 2:11.1, 3:11.1, 4:11.1, 5:11.1, 6:11.1, 7:11.1, 8:11.1, 9:11.2},
+  B: {1:5,    2:20,   3:25,   4:10,   5:5,    6:5,    7:5,    8:12,   9:13},
+  C: {1:8,    2:10,   3:12,   4:7,    5:10,   6:15,   7:8,    8:18,   9:12}
+};
+const scenarioDesc = {
+  A:"Scenario A — Equal Weights (Baseline). All criteria matter equally; no a priori assumption about hierarchy. Standard MCDA baseline (Belton & Stewart, 2002).",
+  B:"Scenario B — Rights-Prioritising. Fundamental rights and rule of law are paramount. Justified by ECHR Art. 6, ICCPR Art. 14, CEPEJ Charter Principle 1, and EU AI Act high-risk classification of judicial AI.",
+  C:"Scenario C — Effectiveness-Prioritising. AI adoption is justified only if it demonstrably improves justice delivery. Justified by Evidence-Based Policy (Pawson & Tilley, 1997) and Implementation Science (Fixsen et al., 2005)."
+};
+
+const scoreValues = [10, 8, 6, 4, 2];
+const answers = {};
+const notes = {};
+
+const formEl = document.getElementById('form');
+data.forEach(category=>{
+  const catDiv = document.createElement('div');
+  catDiv.className = 'category';
+  catDiv.innerHTML = `
+    <div class="cat-header ${category.colorClass}">
+      <div class="cat-badge">${category.num.split(' ')[1][0]}</div>
+      <div>
+        <div class="cat-num">${category.num}</div>
+        <div class="cat-title">${category.cat}</div>
+      </div>
+    </div>
+  `;
+  category.criteria.forEach(crit=>{
+    crit.subs.forEach((sub, sIdx)=>{
+      const key = `${crit.id}-${sIdx}`;
+      const critDiv = document.createElement('div');
+      critDiv.className = 'criterion';
+      critDiv.innerHTML = `
+        <div class="crit-title">
+          <span class="crit-num">${crit.id}.${sIdx+1}</span>
+          ${crit.name}
+          <span class="crit-sub">— ${sub.name}</span>
+        </div>
+        <div class="crit-hint">Select the description that best matches the available evidence:</div>
+        <div class="scores">
+          ${sub.opts.map((opt,i)=>`
+            <button class="score-opt" data-key="${key}" data-score="${scoreValues[i]}">
+              <span class="label">${scoreValues[i]}/10</span>
+              <div>${opt}</div>
+            </button>
+          `).join('')}
+        </div>
+        <div class="notes-wrap">
+          <label>Notes & References</label>
+          <textarea data-key="${key}" placeholder="Add supporting evidence, sources, citations, or contextual notes for this score…"></textarea>
+        </div>
+      `;
+      catDiv.appendChild(critDiv);
+    });
+  });
+  formEl.appendChild(catDiv);
+});
+
+let totalSubs = 0;
+data.forEach(c=>c.criteria.forEach(cr=>totalSubs+=cr.subs.length));
+
+document.querySelectorAll('.score-opt').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = btn.dataset.key;
+    const score = parseFloat(btn.dataset.score);
+    answers[key] = score;
+    document.querySelectorAll(`.score-opt[data-key="${key}"]`).forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    updateProgress();
+  });
+});
+
+document.querySelectorAll('textarea[data-key]').forEach(t=>{
+  t.addEventListener('input', ()=>{ notes[t.dataset.key] = t.value; });
+});
+
+function updateProgress(){
+  const done = Object.keys(answers).length;
+  const pct = (done/totalSubs)*100;
+  document.getElementById('pfill').style.width = pct+'%';
+  document.getElementById('ptext').textContent = `${done} / ${totalSubs}`;
+  if(done === totalSubs){
+    const country = document.getElementById('countryInput').value.trim() || 'Unspecified Jurisdiction';
+    document.getElementById('resCountry').textContent = country;
+    document.getElementById('results').style.display = 'block';
+    calculate(currentScenario);
+    setTimeout(()=>document.getElementById('results').scrollIntoView({behavior:'smooth'}),300);
+  }
+}
+
+function getCriterionScores(){
+  const out = {};
+  data.forEach(cat=>cat.criteria.forEach(crit=>{
+    let sum=0, count=0;
+    crit.subs.forEach((_,sIdx)=>{
+      const key = `${crit.id}-${sIdx}`;
+      if(answers[key]!==undefined){ sum+=answers[key]; count++; }
+    });
+    out[crit.id] = count ? sum/count : 0;
+  }));
+  return out;
+}
+
+let currentScenario = 'A';
+const critNames = {1:"Political Will",2:"Legal Framework",3:"Fundamental Rights",4:"Transparency",5:"Technical Maturity",6:"Implementation",7:"Training",8:"Actual Impact",9:"Equality & Justice"};
+
+function calculate(scenario){
+  currentScenario = scenario;
+  const critScores = getCriterionScores();
+  const w = weights[scenario];
+  let weighted = 0;
+  Object.keys(w).forEach(id=>{
+    weighted += (critScores[id] * w[id]) / 100;
+  });
+  document.getElementById('finalScore').textContent = weighted.toFixed(1);
+  document.getElementById('sdesc').textContent = scenarioDesc[scenario];
+
+  let label;
+  if(weighted>=8.5) label = "Excellent Readiness — Mature institutional and rights infrastructure";
+  else if(weighted>=7) label = "High Readiness — Strong foundation with addressable gaps";
+  else if(weighted>=5) label = "Moderate Readiness — Substantial improvements needed";
+  else if(weighted>=3) label = "Low Readiness — Serious risks to rights and transparency";
+  else label = "Not Ready — Insufficient foundation for judicial AI adoption";
+  document.getElementById('scoreLabel').textContent = label;
+
+  const bdList = document.getElementById('bdList');
+  bdList.innerHTML = '';
+  Object.keys(critNames).forEach(id=>{
+    const score = critScores[id];
+    const row = document.createElement('div');
+    row.className = 'bd-row';
+    row.innerHTML = `
+      <div class="bd-name">${id}. ${critNames[id]} <span>(weight ${w[id]}%)</span></div>
+      <div class="bd-bar"><div class="bd-fill" style="width:${score*10}%"></div></div>
+      <div class="bd-val">${score.toFixed(1)}</div>
+    `;
+    bdList.appendChild(row);
+  });
+}
+
+document.querySelectorAll('.scenario-tabs button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.scenario-tabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    calculate(b.dataset.s);
+  });
+});
+
+function exportReport(){
+  const country = document.getElementById('countryInput').value.trim() || 'Unspecified Jurisdiction';
+  const critScores = getCriterionScores();
+  let txt = "JUDICIAL AI EVALUATION FRAMEWORK — MCDA REPORT\n";
+  txt += "="+"=".repeat(55)+"\n\n";
+  txt += `Jurisdiction: ${country}\n`;
+  txt += `Date: ${new Date().toLocaleDateString('en-GB')}\n\n`;
+
+  ['A','B','C'].forEach(s=>{
+    const w = weights[s];
+    let total = 0;
+    Object.keys(w).forEach(id=>{ total += (critScores[id]*w[id])/100; });
+    const sName = s==='A'?'Equal Weights':(s==='B'?'Rights-Prioritising':'Effectiveness-Prioritising');
+    txt += `Scenario ${s} (${sName}): ${total.toFixed(2)} / 10\n`;
+  });
+  txt += "\n"+"-".repeat(56)+"\nDETAILED SCORES & NOTES\n"+"-".repeat(56)+"\n\n";
+
+  data.forEach(cat=>{
+    txt += `\n### ${cat.num.toUpperCase()}: ${cat.cat}\n`;
+    cat.criteria.forEach(crit=>{
+      txt += `\n  Criterion ${crit.id}: ${crit.name}\n`;
+      crit.subs.forEach((sub,sIdx)=>{
+        const key = `${crit.id}-${sIdx}`;
+        const score = answers[key] ?? '—';
+        const note = notes[key] || '';
+        txt += `    ${crit.id}.${sIdx+1} ${sub.name}: ${score}/10\n`;
+        if(note) txt += `        Notes: ${note.replace(/\n/g,'\n               ')}\n`;
+      });
+    });
+  });
+
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `MCDA_Report_${country.replace(/[^a-z0-9]/gi,'_')}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function resetAll(){
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  Object.keys(notes).forEach(k=>delete notes[k]);
+  document.querySelectorAll('.score-opt.selected').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('textarea[data-key]').forEach(t=>t.value='');
+  document.getElementById('countryInput').value='';
+  document.getElementById('results').style.display = 'none';
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+updateProgress();
+</script>
+</body>
+</html>
