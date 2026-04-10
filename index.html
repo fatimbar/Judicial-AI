@@ -4,505 +4,1217 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Judicial AI Evaluation Framework — MCDA</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="description" content="Multi-Criteria Decision Analysis framework for evaluating judicial AI readiness. PhD research by Fatima Al-Barrak, York Law School.">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Chart.js for radar & bar charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- jsPDF & html2canvas for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 <style>
+/* ==========================================================
+   DESIGN TOKENS — New color palette per request
+   ========================================================== */
 :root{
-  --bg:#fffaf0;
-  --bg-2:#fff3d6;
-  --ink:#1a1530;
-  --ink-soft:#4a3f6b;
-  --primary:#ff3d68;
-  --primary-2:#ff6b35;
-  --accent:#00b8a9;
-  --accent-2:#7c3aed;
-  --yellow:#ffc93c;
-  --rule:#1a1530;
-  --muted:#6b6080;
-  --shadow: 6px 6px 0 var(--ink);
+  --bg:        #F8FAFC;   /* base background */
+  --surface:   #FFFFFF;   /* cards / panels */
+  --ink:       #1E293B;   /* main text & headings */
+  --muted:     #94A3B8;   /* secondary text, borders */
+  --primary:   #6366F1;   /* buttons, icons, accents */
+  --hover:     #0EA5E9;   /* hover / active interaction */
+  --border:    #E2E8F0;   /* soft dividers */
+  --success:   #10B981;
+  --danger:    #EF4444;
+  --radius:    10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 1px 3px rgba(15,23,42,.08);
+  --shadow:    0 4px 6px -1px rgba(15,23,42,.08), 0 2px 4px -2px rgba(15,23,42,.06);
+  --shadow-lg: 0 10px 25px -5px rgba(15,23,42,.10), 0 8px 10px -6px rgba(15,23,42,.06);
+  --transition: 0.2s ease;
 }
+
+/* ==========================================================
+   GLOBAL RESET & BASE
+   ========================================================== */
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{
+html{scroll-behavior:smooth}
+body{
   background:var(--bg);
   color:var(--ink);
-  font-family:'DM Sans',sans-serif;
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
   line-height:1.65;
   -webkit-font-smoothing:antialiased;
-}
-body{
-  background-image:
-    radial-gradient(circle at 15% 8%, rgba(255,61,104,.10) 0%, transparent 35%),
-    radial-gradient(circle at 85% 25%, rgba(0,184,169,.12) 0%, transparent 35%),
-    radial-gradient(circle at 50% 90%, rgba(124,58,237,.08) 0%, transparent 40%);
   min-height:100vh;
 }
-.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:700;letter-spacing:-0.02em;color:var(--ink)}
+a{color:var(--primary);text-decoration:none;transition:color var(--transition)}
+a:hover{color:var(--hover)}
+button{font-family:inherit;cursor:pointer}
 
-header{
-  border:3px solid var(--ink);
-  background:var(--yellow);
-  padding:40px 32px;
-  margin-bottom:40px;
-  box-shadow:var(--shadow);
-  position:relative;
+/* ==========================================================
+   NAVIGATION BAR (sticky)
+   ========================================================== */
+.navbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(248,250,252,.92);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
 }
-header::after{
-  content:"MCDA";
-  position:absolute;
-  top:-18px;right:32px;
+.nav-inner{
+  max-width:1200px;margin:0 auto;
+  padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+.nav-brand{
+  font-family:'Fraunces',serif;
+  font-weight:900;
+  font-size:18px;
+  color:var(--ink);
+  display:flex;align-items:center;gap:10px;
+}
+.nav-brand-badge{
+  background:var(--primary);color:#fff;
+  padding:4px 10px;border-radius:6px;
+  font-family:'Inter',sans-serif;
+  font-size:11px;letter-spacing:1.5px;font-weight:700;
+}
+.nav-links{
+  display:flex;gap:6px;list-style:none;
+  flex-wrap:wrap;
+}
+.nav-links a{
+  padding:8px 14px;
+  color:var(--ink);
+  font-size:14px;font-weight:500;
+  border-radius:8px;
+  transition:all var(--transition);
+}
+.nav-links a:hover{
   background:var(--primary);
   color:#fff;
-  padding:6px 16px;
-  font-weight:700;
-  font-size:13px;
-  letter-spacing:3px;
-  border:3px solid var(--ink);
-  box-shadow:3px 3px 0 var(--ink);
 }
-.eyebrow{
-  font-size:12px;letter-spacing:4px;
-  text-transform:uppercase;
-  font-weight:600;
-  margin-bottom:14px;
-  display:inline-block;
-  background:var(--ink);color:var(--bg);
-  padding:6px 14px;
+.nav-toggle{
+  display:none;
+  background:none;border:1px solid var(--border);
+  padding:8px 10px;border-radius:8px;
+  color:var(--ink);font-size:18px;
 }
-h1{
-  font-family:'Fraunces',serif;
-  font-size:clamp(34px,5vw,56px);
-  font-weight:900;
-  line-height:1.05;
-  margin-bottom:14px;
-  letter-spacing:-1px;
-}
-h1 em{
-  font-style:italic;
-  color:var(--primary);
-  font-weight:900;
-}
-.subtitle{
-  font-size:16px;
-  max-width:720px;
-  color:var(--ink-soft);
-  font-weight:500;
+@media (max-width:820px){
+  .nav-links{display:none;width:100%;flex-direction:column;padding-top:12px}
+  .nav-links.open{display:flex}
+  .nav-inner{flex-wrap:wrap}
+  .nav-toggle{display:block}
 }
 
-.country-panel{
-  background:#fff;
-  border:3px solid var(--ink);
-  padding:32px;
-  margin-bottom:40px;
+/* ==========================================================
+   LAYOUT
+   ========================================================== */
+.wrap{max-width:1200px;margin:0 auto;padding:40px 24px 60px}
+
+/* ==========================================================
+   HERO HEADER
+   ========================================================== */
+.hero{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:48px 40px;
+  margin-bottom:32px;
   box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:"";
+  position:absolute;top:0;right:0;
+  width:260px;height:260px;
+  background:radial-gradient(circle,rgba(99,102,241,.10),transparent 70%);
+  pointer-events:none;
+}
+.eyebrow{
+  display:inline-block;
+  font-size:11px;letter-spacing:2.5px;
+  text-transform:uppercase;
+  font-weight:600;
+  color:var(--primary);
+  background:rgba(99,102,241,.08);
+  padding:6px 14px;border-radius:20px;
+  margin-bottom:18px;
+}
+.hero h1{
+  font-size:clamp(32px,4.2vw,48px);
+  line-height:1.1;margin-bottom:16px;
+}
+.hero h1 em{
+  font-style:italic;color:var(--primary);
+}
+.hero .lead{
+  font-size:16px;max-width:720px;
+  color:var(--muted);font-weight:500;
+}
+
+/* ==========================================================
+   TABS NAVIGATION
+   ========================================================== */
+.tabs{
+  display:flex;gap:4px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:6px;margin-bottom:24px;
+  box-shadow:var(--shadow-sm);
+  overflow-x:auto;
+}
+.tab-btn{
+  flex:1;min-width:max-content;
+  padding:12px 18px;
+  background:transparent;border:none;
+  color:var(--muted);
+  font-size:14px;font-weight:600;
+  border-radius:8px;
+  transition:all var(--transition);
+  white-space:nowrap;
+}
+.tab-btn:hover{color:var(--ink);background:rgba(99,102,241,.05)}
+.tab-btn.active{
+  background:var(--primary);
+  color:#fff;
+  box-shadow:0 2px 8px rgba(99,102,241,.3);
+}
+.tab-panel{display:none;animation:fadeIn .3s ease}
+.tab-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ==========================================================
+   COUNTRY INPUT PANEL
+   ========================================================== */
+.country-panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:28px;
+  margin-bottom:28px;
+  box-shadow:var(--shadow-sm);
 }
 .country-panel label{
   display:block;
   font-family:'Fraunces',serif;
-  font-size:22px;
-  font-weight:700;
-  margin-bottom:14px;
+  font-size:20px;font-weight:700;
+  margin-bottom:12px;color:var(--ink);
 }
 .country-panel input{
   width:100%;
-  padding:16px 20px;
-  border:3px solid var(--ink);
-  font-family:'DM Sans',sans-serif;
-  font-size:18px;
+  padding:14px 18px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-family:'Inter',sans-serif;
+  font-size:16px;
   background:var(--bg);
   color:var(--ink);
-  font-weight:500;
+  transition:all var(--transition);
 }
 .country-panel input:focus{
   outline:none;
-  background:var(--bg-2);
-  box-shadow:4px 4px 0 var(--primary);
+  border-color:var(--primary);
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(99,102,241,.15);
 }
 .country-panel .hint{
-  font-size:13px;
+  font-size:13px;color:var(--muted);margin-top:10px;
+}
+.panel-actions{
+  margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;
+}
+.btn-mini{
+  padding:8px 14px;
+  background:transparent;
+  border:1px solid var(--border);
+  border-radius:6px;
   color:var(--muted);
-  margin-top:10px;
+  font-size:12px;font-weight:600;
+  transition:all var(--transition);
+}
+.btn-mini:hover{
+  border-color:var(--danger);
+  color:var(--danger);
+  background:rgba(239,68,68,.05);
 }
 
+/* ==========================================================
+   PROGRESS BAR
+   ========================================================== */
 .progress-bar{
-  position:sticky;top:0;z-index:50;
-  background:var(--ink);
-  color:var(--bg);
-  margin:0 -24px 36px;
-  padding:14px 24px;
-  display:flex;align-items:center;gap:16px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 24px;
+  margin-bottom:28px;
+  display:flex;align-items:center;gap:18px;
   font-size:13px;font-weight:600;
-  border-bottom:3px solid var(--primary);
+  box-shadow:var(--shadow-sm);
 }
 .progress-track{
-  flex:1;height:10px;background:rgba(255,255,255,.15);
-  position:relative;border:1px solid rgba(255,255,255,.3);
+  flex:1;height:8px;
+  background:var(--border);
+  border-radius:999px;overflow:hidden;
 }
 .progress-fill{
-  height:100%;
-  background:linear-gradient(90deg,var(--primary),var(--yellow),var(--accent));
-  width:0%;transition:width .4s ease;
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--primary),var(--hover));
+  border-radius:999px;
+  transition:width .4s ease;
 }
-.progress-text{white-space:nowrap;letter-spacing:1px}
+.progress-text{
+  white-space:nowrap;letter-spacing:1px;
+  color:var(--muted);
+}
 
+/* ==========================================================
+   CATEGORY & CRITERION CARDS
+   ========================================================== */
 .category{
-  margin-bottom:40px;
-  border:3px solid var(--ink);
-  background:#fff;
-  box-shadow:var(--shadow);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  margin-bottom:24px;
+  box-shadow:var(--shadow-sm);
+  overflow:hidden;
 }
 .cat-header{
-  padding:24px 32px;
-  border-bottom:3px solid var(--ink);
-  display:flex;align-items:center;gap:20px;
+  padding:22px 28px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+  background:linear-gradient(135deg,rgba(99,102,241,.06),transparent);
 }
-.cat-header.c1{background:#ffe5ec}
-.cat-header.c2{background:#e0f7f4}
-.cat-header.c3{background:#f3e8ff}
-.cat-header.c4{background:#fff4cc}
 .cat-badge{
-  background:var(--ink);
-  color:var(--bg);
-  width:54px;height:54px;
+  background:var(--primary);
+  color:#fff;
+  width:44px;height:44px;
+  border-radius:10px;
   display:flex;align-items:center;justify-content:center;
   font-family:'Fraunces',serif;
-  font-size:26px;font-weight:900;
+  font-size:20px;font-weight:900;
   flex-shrink:0;
 }
 .cat-num{
-  font-size:11px;letter-spacing:3px;
+  font-size:11px;letter-spacing:2px;
   text-transform:uppercase;
-  font-weight:700;
-  color:var(--ink-soft);
-  margin-bottom:4px;
+  font-weight:700;color:var(--muted);
+  margin-bottom:2px;
 }
 .cat-title{
   font-family:'Fraunces',serif;
-  font-size:26px;font-weight:700;
-  line-height:1.2;
+  font-size:22px;font-weight:700;
+  line-height:1.2;color:var(--ink);
 }
 
-.criterion{
-  padding:32px;
-  border-bottom:2px dashed var(--ink);
-}
+.criterion{padding:28px;border-bottom:1px solid var(--border)}
 .criterion:last-child{border-bottom:none}
 .crit-title{
   font-family:'Fraunces',serif;
-  font-size:20px;font-weight:700;
+  font-size:18px;font-weight:700;
   margin-bottom:6px;
-  display:flex;align-items:baseline;gap:12px;
-  flex-wrap:wrap;
+  display:flex;align-items:baseline;gap:10px;
+  flex-wrap:wrap;color:var(--ink);
 }
 .crit-num{
-  background:var(--primary);
-  color:#fff;
-  padding:3px 10px;
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;
-  font-weight:700;
+  background:var(--primary);color:#fff;
+  padding:3px 9px;
+  border-radius:5px;
+  font-family:'Inter',sans-serif;
+  font-size:12px;font-weight:700;
+  letter-spacing:.3px;
 }
 .crit-sub{
-  color:var(--ink-soft);
-  font-weight:500;
-  font-style:italic;
+  color:var(--muted);
+  font-weight:500;font-style:italic;
+  font-size:16px;
 }
 .crit-hint{
-  color:var(--muted);
-  font-size:13px;
-  margin-bottom:18px;
+  color:var(--muted);font-size:13px;
+  margin-bottom:16px;
 }
 
 .scores{
   display:grid;
   grid-template-columns:repeat(5,1fr);
-  gap:10px;
-  margin-top:14px;
+  gap:10px;margin-top:12px;
 }
+@media (max-width:800px){.scores{grid-template-columns:repeat(2,1fr)}}
 .score-opt{
-  border:2px solid var(--ink);
+  border:1px solid var(--border);
   background:#fff;
   padding:14px 12px;
-  cursor:pointer;
+  border-radius:8px;
   text-align:left;
   font-family:inherit;
   font-size:12.5px;
   color:var(--ink);
-  transition:transform .15s, box-shadow .15s, background .15s;
   line-height:1.5;
   font-weight:500;
+  transition:all var(--transition);
 }
 .score-opt:hover{
-  transform:translate(-2px,-2px);
-  box-shadow:4px 4px 0 var(--ink);
+  border-color:var(--primary);
+  transform:translateY(-2px);
+  box-shadow:var(--shadow);
 }
 .score-opt .label{
   font-family:'Fraunces',serif;
-  font-weight:900;
-  font-size:18px;
-  margin-bottom:8px;
+  font-weight:900;font-size:16px;
+  margin-bottom:6px;
   padding:2px 8px;
+  background:var(--bg);
+  border-radius:4px;
   display:inline-block;
+  color:var(--primary);
 }
-.score-opt[data-score="10"] .label{background:#c6f6d5;color:#1a5d3a}
-.score-opt[data-score="8"]  .label{background:#d6f0a8;color:#3d5016}
-.score-opt[data-score="6"]  .label{background:#fff4cc;color:#7a5c00}
-.score-opt[data-score="4"]  .label{background:#ffd5b8;color:#8a3a00}
-.score-opt[data-score="2"]  .label{background:#ffd0db;color:#8a0e2a}
-
 .score-opt.selected{
-  background:var(--ink);
-  color:var(--bg);
-  transform:translate(-2px,-2px);
-  box-shadow:4px 4px 0 var(--primary);
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+  box-shadow:0 4px 12px rgba(99,102,241,.3);
 }
 .score-opt.selected .label{
-  background:var(--primary);
+  background:rgba(255,255,255,.2);
   color:#fff;
 }
 
-.notes-wrap{margin-top:18px}
+.notes-wrap{margin-top:14px}
 .notes-wrap label{
   display:block;
-  font-size:12px;
-  font-weight:600;
-  letter-spacing:1.5px;
+  font-size:12px;font-weight:600;
+  color:var(--muted);
   text-transform:uppercase;
-  color:var(--ink-soft);
-  margin-bottom:8px;
+  letter-spacing:1px;
+  margin-bottom:6px;
 }
 .notes-wrap textarea{
   width:100%;
-  min-height:70px;
-  padding:12px 14px;
-  border:2px solid var(--ink);
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-family:'Inter',sans-serif;
+  font-size:13px;
   background:var(--bg);
-  font-family:'DM Sans',sans-serif;
-  font-size:14px;
   color:var(--ink);
   resize:vertical;
-  line-height:1.5;
+  min-height:60px;
+  transition:all var(--transition);
 }
 .notes-wrap textarea:focus{
   outline:none;
+  border-color:var(--primary);
   background:#fff;
-  box-shadow:3px 3px 0 var(--accent);
+  box-shadow:0 0 0 3px rgba(99,102,241,.12);
 }
 
-@media(max-width:768px){
-  .scores{grid-template-columns:1fr}
-  .wrap{padding:24px 16px 60px}
-  .criterion{padding:22px 18px}
-  .cat-header{padding:20px}
-  header{padding:28px 22px}
-}
-
+/* ==========================================================
+   RESULTS PANEL
+   ========================================================== */
 .results{
-  margin-top:60px;
-  border:3px solid var(--ink);
-  background:#fff;
+  display:none;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:36px;
+  margin-top:32px;
   box-shadow:var(--shadow);
-  overflow:hidden;
 }
-.results-header{
-  background:var(--ink);
-  color:var(--bg);
-  padding:32px;
-  text-align:center;
+.results h2{
+  font-size:28px;margin-bottom:6px;
 }
-.results-header h2{
-  font-family:'Fraunces',serif;
-  font-size:32px;
-  font-weight:900;
-  margin-bottom:6px;
+.res-country{
+  color:var(--primary);font-weight:800;
 }
-.results-country{
-  font-size:14px;
-  letter-spacing:3px;
-  text-transform:uppercase;
-  color:var(--yellow);
-  font-weight:600;
-}
-.results-body{padding:36px 32px}
-
 .scenario-tabs{
-  display:flex;gap:0;
-  margin-bottom:30px;
-  border:3px solid var(--ink);
+  display:flex;gap:8px;margin:24px 0;flex-wrap:wrap;
 }
 .scenario-tabs button{
-  flex:1;
-  padding:16px 14px;
-  background:#fff;
-  border:none;
-  border-left:3px solid var(--ink);
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;
-  font-weight:700;
-  cursor:pointer;
+  padding:10px 18px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
   color:var(--ink);
-  transition:background .15s;
+  font-size:13px;font-weight:600;
+  transition:all var(--transition);
 }
-.scenario-tabs button:first-child{border-left:none}
-.scenario-tabs button:hover{background:var(--bg-2)}
+.scenario-tabs button:hover{border-color:var(--primary);color:var(--primary)}
 .scenario-tabs button.active{
   background:var(--primary);
   color:#fff;
+  border-color:var(--primary);
 }
-.score-display{
-  text-align:center;
-  background:linear-gradient(135deg,var(--yellow) 0%,var(--primary-2) 100%);
-  border:3px solid var(--ink);
-  padding:30px;
-  margin-bottom:24px;
-}
-.score-number{
+.score-big{
   font-family:'Fraunces',serif;
-  font-size:88px;
-  font-weight:900;
+  font-size:72px;font-weight:900;
+  color:var(--primary);
   line-height:1;
-  color:var(--ink);
+  margin:8px 0 4px;
 }
-.score-out-of{font-size:28px;color:var(--ink-soft);font-weight:700}
-.score-label{
-  font-size:18px;
-  font-weight:700;
-  margin-top:10px;
-  color:var(--ink);
-}
-.scenario-desc{
-  background:var(--bg-2);
-  border:2px solid var(--ink);
-  padding:16px 20px;
-  font-size:14px;
-  color:var(--ink);
-  margin-bottom:30px;
-  font-weight:500;
+.score-label{font-size:16px;color:var(--ink);font-weight:600;margin-bottom:8px}
+.sdesc{
+  font-size:13px;color:var(--muted);
+  font-style:italic;
+  padding:14px 18px;
+  background:var(--bg);
+  border-left:3px solid var(--primary);
+  border-radius:6px;
+  margin-top:14px;
 }
 
-.breakdown{margin-top:24px}
-.breakdown h3{
-  font-family:'Fraunces',serif;
-  font-size:22px;
-  font-weight:700;
-  margin-bottom:18px;
-  padding-bottom:10px;
-  border-bottom:3px solid var(--ink);
-}
+.breakdown{margin-top:28px}
+.breakdown h3{font-size:20px;margin-bottom:14px}
 .bd-row{
-  display:flex;align-items:center;gap:14px;
+  display:grid;
+  grid-template-columns:1fr 2fr auto;
+  gap:14px;align-items:center;
   padding:12px 0;
-  border-bottom:1px dashed var(--ink);
-  font-size:14px;
+  border-bottom:1px dashed var(--border);
 }
-.bd-name{flex:1.2;font-weight:600}
+.bd-name{font-size:14px;font-weight:600;color:var(--ink)}
 .bd-name span{color:var(--muted);font-weight:500;font-size:12px}
 .bd-bar{
-  flex:2;height:14px;background:var(--bg-2);
-  border:2px solid var(--ink);position:relative;
+  height:10px;background:var(--border);
+  border-radius:999px;overflow:hidden;
 }
 .bd-fill{
   height:100%;
-  background:linear-gradient(90deg,var(--accent),var(--primary));
+  background:linear-gradient(90deg,var(--primary),var(--hover));
+  border-radius:999px;
+  transition:width .6s ease;
 }
 .bd-val{
-  width:54px;text-align:right;
-  font-weight:700;
   font-family:'Fraunces',serif;
+  font-weight:900;
   font-size:18px;
+  min-width:48px;text-align:right;
+  color:var(--primary);
 }
 
 .actions{
-  display:flex;gap:12px;
   margin-top:32px;
-  flex-wrap:wrap;
+  display:flex;gap:10px;flex-wrap:wrap;
 }
 .btn{
-  padding:14px 28px;
-  border:3px solid var(--ink);
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;
-  font-weight:700;
-  cursor:pointer;
-  letter-spacing:1.5px;
-  text-transform:uppercase;
-  transition:transform .15s, box-shadow .15s;
+  padding:12px 22px;
+  border-radius:8px;
+  font-size:14px;font-weight:600;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--ink);
+  transition:all var(--transition);
+  display:inline-flex;align-items:center;gap:8px;
 }
 .btn:hover{
-  transform:translate(-2px,-2px);
-  box-shadow:4px 4px 0 var(--ink);
+  border-color:var(--primary);
+  color:var(--primary);
+  transform:translateY(-1px);
+  box-shadow:var(--shadow);
 }
-.btn-primary{background:var(--primary);color:#fff}
-.btn-secondary{background:var(--accent);color:#fff}
-.btn-ghost{background:#fff;color:var(--ink)}
+.btn-primary{
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+.btn-primary:hover{
+  background:var(--hover);
+  border-color:var(--hover);
+  color:#fff;
+}
+.btn-danger:hover{
+  border-color:var(--danger);
+  color:var(--danger);
+}
 
+/* ==========================================================
+   COMPARE TAB
+   ========================================================== */
+.compare-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-bottom:28px;
+}
+@media (max-width:900px){.compare-grid{grid-template-columns:1fr}}
+.compare-col{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow-sm);
+}
+.compare-col h3{
+  font-size:18px;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.compare-col .side-label{
+  display:inline-block;
+  width:26px;height:26px;
+  border-radius:6px;
+  background:var(--primary);color:#fff;
+  font-family:'Fraunces',serif;
+  font-size:14px;font-weight:900;
+  text-align:center;line-height:26px;
+}
+.compare-col input[type="text"]{
+  width:100%;
+  padding:10px 14px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-size:14px;
+  background:var(--bg);
+  color:var(--ink);
+  margin-bottom:12px;
+}
+.compare-col input[type="text"]:focus{
+  outline:none;border-color:var(--primary);
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(99,102,241,.12);
+}
+.preset-buttons{
+  display:flex;gap:6px;flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.preset-buttons button{
+  padding:6px 12px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:20px;
+  color:var(--muted);
+  font-size:11px;font-weight:600;
+  transition:all var(--transition);
+}
+.preset-buttons button:hover{
+  border-color:var(--primary);
+  color:var(--primary);
+  background:#fff;
+}
+.compare-scores{
+  max-height:400px;overflow-y:auto;
+  padding-right:6px;
+}
+.compare-scores::-webkit-scrollbar{width:6px}
+.compare-scores::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.compare-sub{
+  padding:10px 0;
+  border-bottom:1px dashed var(--border);
+}
+.compare-sub .sub-label{
+  font-size:12px;font-weight:600;
+  color:var(--ink);
+  margin-bottom:6px;
+}
+.compare-sub select{
+  width:100%;
+  padding:6px 10px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-size:12px;
+  background:#fff;
+  color:var(--ink);
+}
+.compare-result{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow-sm);
+}
+.compare-result h3{
+  font-size:18px;margin-bottom:16px;
+}
+.compare-summary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:20px;
+}
+.summary-card{
+  padding:18px;
+  background:var(--bg);
+  border-radius:8px;
+  border-left:3px solid var(--primary);
+}
+.summary-card .name{
+  font-size:12px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;
+  font-weight:600;margin-bottom:4px;
+}
+.summary-card .score{
+  font-family:'Fraunces',serif;
+  font-size:32px;font-weight:900;
+  color:var(--primary);
+}
+.summary-card .out-of{
+  font-size:14px;color:var(--muted);
+}
+
+/* ==========================================================
+   CHARTS TAB
+   ========================================================== */
+.chart-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:28px;
+  margin-bottom:24px;
+  box-shadow:var(--shadow-sm);
+}
+.chart-card h3{
+  font-size:18px;margin-bottom:14px;
+}
+.chart-card .chart-desc{
+  font-size:13px;color:var(--muted);
+  margin-bottom:20px;
+}
+.chart-wrap{
+  position:relative;
+  height:420px;
+  max-width:100%;
+}
+.chart-controls{
+  display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;
+}
+
+/* ==========================================================
+   DOCUMENTATION TAB
+   ========================================================== */
+.doc-content{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:40px;
+  box-shadow:var(--shadow-sm);
+  line-height:1.75;
+}
+.doc-content h2{
+  font-size:26px;
+  margin:32px 0 12px;
+  padding-bottom:10px;
+  border-bottom:2px solid var(--border);
+}
+.doc-content h2:first-child{margin-top:0}
+.doc-content h3{
+  font-size:19px;margin:24px 0 8px;
+  color:var(--primary);
+}
+.doc-content p{
+  color:var(--ink);
+  margin-bottom:14px;
+  font-size:15px;
+}
+.doc-content ul{
+  margin:12px 0 18px 22px;
+  color:var(--ink);
+}
+.doc-content ul li{margin-bottom:6px}
+.doc-content .ref-list{
+  background:var(--bg);
+  padding:20px 24px;
+  border-radius:8px;
+  border-left:3px solid var(--primary);
+  list-style:none;margin-left:0;
+}
+.doc-content .ref-list li{
+  padding:8px 0;
+  border-bottom:1px dashed var(--border);
+  font-size:14px;
+}
+.doc-content .ref-list li:last-child{border-bottom:none}
+.crit-card{
+  padding:16px 20px;
+  background:var(--bg);
+  border-radius:8px;
+  margin-bottom:10px;
+  border-left:3px solid var(--primary);
+}
+.crit-card strong{color:var(--primary)}
+.scenario-box{
+  padding:20px 24px;
+  background:var(--bg);
+  border-radius:8px;
+  margin-bottom:14px;
+  border-left:3px solid var(--hover);
+}
+.scenario-box h4{
+  font-family:'Fraunces',serif;
+  font-size:16px;margin-bottom:8px;
+  color:var(--ink);
+}
+
+/* ==========================================================
+   ABOUT TAB
+   ========================================================== */
+.about-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:24px;
+}
+@media (max-width:820px){.about-grid{grid-template-columns:1fr}}
+.about-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:32px;
+  box-shadow:var(--shadow-sm);
+}
+.about-card h2{
+  font-size:22px;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.about-card h2::before{
+  content:"";
+  width:4px;height:24px;
+  background:var(--primary);
+  border-radius:2px;
+}
+.about-card h3{
+  font-size:17px;
+  margin:18px 0 8px;
+  color:var(--primary);
+}
+.about-card p{
+  font-size:14px;line-height:1.7;
+  color:var(--ink);
+  margin-bottom:10px;
+}
+.about-card ul{
+  margin:10px 0 14px 20px;
+  font-size:14px;
+  color:var(--ink);
+}
+.about-card ul li{margin-bottom:5px}
+.researcher-name{
+  font-family:'Fraunces',serif;
+  font-size:22px;font-weight:900;
+  color:var(--primary);
+  margin-bottom:4px;
+}
+.contact-line{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+/* ==========================================================
+   CONTACT SECTION
+   ========================================================== */
+.contact-section{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:40px;
+  margin-top:32px;
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+.contact-section h2{font-size:26px;margin-bottom:10px}
+.contact-section p{color:var(--muted);margin-bottom:16px}
+.contact-links{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+}
+.contact-links a{
+  padding:10px 20px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--ink);
+  font-weight:600;font-size:14px;
+  transition:all var(--transition);
+}
+.contact-links a:hover{
+  border-color:var(--primary);
+  color:var(--primary);
+  background:rgba(99,102,241,.05);
+}
+
+/* ==========================================================
+   FOOTER
+   ========================================================== */
 footer{
-  text-align:center;margin-top:40px;
-  font-size:11px;color:var(--muted);
-  letter-spacing:3px;
-  text-transform:uppercase;
-  font-weight:600;
+  margin-top:60px;
+  padding:40px 24px 30px;
+  border-top:1px solid var(--border);
+  text-align:center;
+  background:var(--surface);
+}
+footer .foot-title{
+  font-family:'Fraunces',serif;
+  font-size:16px;font-weight:900;
+  color:var(--ink);
+  letter-spacing:2px;
+  margin-bottom:8px;
+}
+footer .foot-meta{
+  font-size:13px;color:var(--muted);
+  margin-bottom:8px;
+}
+footer .foot-disclaimer{
+  font-size:12px;color:var(--muted);
+  font-style:italic;
+  max-width:600px;margin:10px auto;
+  padding:10px;
+  background:var(--bg);
+  border-radius:6px;
+}
+footer .foot-copy{
+  font-size:12px;color:var(--muted);
+  margin-top:10px;
+}
+
+/* ==========================================================
+   PRINT
+   ========================================================== */
+@media print{
+  .navbar,.tabs,.panel-actions,.actions,.scenario-tabs,
+  .chart-controls,.btn,.progress-bar{display:none !important}
+  body{background:#fff}
+  .wrap{max-width:100%;padding:0}
 }
 </style>
 </head>
 <body>
+
+<!-- ============================================================
+     NAVIGATION BAR
+     ============================================================ -->
+<nav class="navbar" id="home">
+  <div class="nav-inner">
+    <div class="nav-brand">
+      Judicial AI <span class="nav-brand-badge">MCDA</span>
+    </div>
+    <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <ul class="nav-links">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#framework-map" onclick="switchTab('tool')">Framework Map</a></li>
+      <li><a href="#framework-map" onclick="switchTab('tool')">MCDA Tool</a></li>
+      <li><a href="#framework-map" onclick="switchTab('docs')">Documentation</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
 <div class="wrap">
 
-<header>
-  <span class="eyebrow">Multi-Criteria Decision Analysis</span>
-  <h1>Judicial AI <em>Evaluation</em> Framework</h1>
-  <p class="subtitle">An interactive assessment built on MCDA methodology — score 22 sub-indicators across 9 criteria, document your evidence, and explore results under three weighting scenarios.</p>
-</header>
-
-<div class="country-panel">
-  <label for="countryInput">Jurisdiction Under Assessment</label>
-  <input type="text" id="countryInput" placeholder="e.g. Singapore, United States (COMPAS), Argentina (AymurAI)…" />
-  <p class="hint">Enter the country, jurisdiction, or specific judicial AI system you are evaluating. This will appear on the final report.</p>
-</div>
-
-<div class="progress-bar">
-  <span class="progress-text">PROGRESS</span>
-  <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
-  <span class="progress-text" id="ptext">0 / 22</span>
-</div>
-
-<div id="form"></div>
-
-<div class="results" id="results" style="display:none">
-  <div class="results-header">
-    <h2>Assessment Results</h2>
-    <div class="results-country" id="resCountry">—</div>
+  <!-- ============================================================
+       HERO
+       ============================================================ -->
+  <div class="hero">
+    <span class="eyebrow">Multi-Criteria Decision Analysis</span>
+    <h1>Judicial AI <em>Evaluation</em> Framework</h1>
+    <p class="lead">An interactive assessment built on MCDA methodology — score 22 sub-indicators across 9 criteria, document your evidence, and explore results under three weighting scenarios.</p>
   </div>
-  <div class="results-body">
 
-    <div class="scenario-tabs">
-      <button data-s="A" class="active">Scenario A · Equal Weights</button>
-      <button data-s="B">Scenario B · Rights-Prioritising</button>
-      <button data-s="C">Scenario C · Effectiveness</button>
+  <!-- ============================================================
+       TABS
+       ============================================================ -->
+  <div class="tabs" id="framework-map">
+    <button class="tab-btn active" data-tab="tool">🧭 MCDA Tool</button>
+    <button class="tab-btn" data-tab="compare">⚖️ Compare</button>
+    <button class="tab-btn" data-tab="charts">📊 Results &amp; Charts</button>
+    <button class="tab-btn" data-tab="docs">📚 Documentation</button>
+    <button class="tab-btn" data-tab="about">👤 About</button>
+  </div>
+
+  <!-- ============================================================
+       TAB 1 — MCDA TOOL
+       ============================================================ -->
+  <div class="tab-panel active" id="panel-tool">
+
+    <div class="country-panel">
+      <label for="countryInput">Jurisdiction Under Assessment</label>
+      <input type="text" id="countryInput" placeholder="e.g. Singapore, Brazil, United Kingdom, European Union…">
+      <div class="hint">Enter the country, jurisdiction, or specific judicial AI system you are evaluating. This will appear on the final report.</div>
+      <div class="panel-actions">
+        <button class="btn-mini" onclick="clearSaved()">🗑 Clear Saved Data</button>
+        <span style="font-size:12px;color:var(--muted);align-self:center">💾 Your progress is auto-saved in your browser</span>
+      </div>
     </div>
 
-    <div class="scenario-desc" id="sdesc"></div>
+    <div class="progress-bar">
+      <span class="progress-text">PROGRESS</span>
+      <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
+      <span class="progress-text" id="ptext">0 / 22</span>
+    </div>
 
-    <div class="score-display">
-      <div><span class="score-number" id="finalScore">0.0</span><span class="score-out-of"> / 10</span></div>
+    <div id="form"></div>
+
+    <!-- Results -->
+    <div class="results" id="results">
+      <h2>Assessment Results</h2>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:14px">Jurisdiction: <span class="res-country" id="resCountry">—</span></div>
+
+      <div class="scenario-tabs">
+        <button data-s="A" class="active">Scenario A · Equal Weights</button>
+        <button data-s="B">Scenario B · Rights-Prioritising</button>
+        <button data-s="C">Scenario C · Effectiveness</button>
+      </div>
+
+      <div class="score-big" id="finalScore">0.0</div>
       <div class="score-label" id="scoreLabel">—</div>
-    </div>
+      <div class="sdesc" id="sdesc">—</div>
 
-    <div class="breakdown">
-      <h3>Breakdown by Criterion</h3>
-      <div id="bdList"></div>
-    </div>
+      <div class="breakdown">
+        <h3>Breakdown by Criterion</h3>
+        <div id="bdList"></div>
+      </div>
 
-    <div class="actions">
-      <button class="btn btn-primary" onclick="exportReport()">Export Report (.txt)</button>
-      <button class="btn btn-secondary" onclick="window.print()">Print / Save PDF</button>
-      <button class="btn btn-ghost" onclick="resetAll()">Reset Assessment</button>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="exportPDF()">📄 Export PDF</button>
+        <button class="btn" onclick="exportCSV()">📊 Export CSV</button>
+        <button class="btn" onclick="exportReportTxt()">📝 Export .txt</button>
+        <button class="btn" onclick="window.print()">🖨 Print</button>
+        <button class="btn btn-danger" onclick="resetAll()">🔄 Reset</button>
+      </div>
     </div>
   </div>
+
+  <!-- ============================================================
+       TAB 2 — COMPARE
+       ============================================================ -->
+  <div class="tab-panel" id="panel-compare">
+    <div style="margin-bottom:20px;color:var(--muted);font-size:14px">
+      Compare two jurisdictions side by side. Load presets or enter scores manually. Results update in real time.
+    </div>
+
+    <div class="compare-grid">
+      <!-- Column A -->
+      <div class="compare-col">
+        <h3><span class="side-label">A</span> Jurisdiction A</h3>
+        <input type="text" id="compA-name" placeholder="Enter name…">
+        <div class="preset-buttons">
+          <button onclick="loadPreset('A','singapore')">🇸🇬 Singapore</button>
+          <button onclick="loadPreset('A','compas')">🇺🇸 COMPAS</button>
+          <button onclick="loadPreset('A','aymurai')">🇦🇷 AymurAI</button>
+          <button onclick="clearCompare('A')">Clear</button>
+        </div>
+        <div class="compare-scores" id="compA-scores"></div>
+      </div>
+
+      <!-- Column B -->
+      <div class="compare-col">
+        <h3><span class="side-label">B</span> Jurisdiction B</h3>
+        <input type="text" id="compB-name" placeholder="Enter name…">
+        <div class="preset-buttons">
+          <button onclick="loadPreset('B','singapore')">🇸🇬 Singapore</button>
+          <button onclick="loadPreset('B','compas')">🇺🇸 COMPAS</button>
+          <button onclick="loadPreset('B','aymurai')">🇦🇷 AymurAI</button>
+          <button onclick="clearCompare('B')">Clear</button>
+        </div>
+        <div class="compare-scores" id="compB-scores"></div>
+      </div>
+    </div>
+
+    <div class="compare-result">
+      <h3>Live Comparison</h3>
+      <div class="compare-summary">
+        <div class="summary-card">
+          <div class="name" id="summA-name">Jurisdiction A</div>
+          <div><span class="score" id="summA-score">0.0</span><span class="out-of"> / 10</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px" id="summA-raw">0 / 220</div>
+        </div>
+        <div class="summary-card">
+          <div class="name" id="summB-name">Jurisdiction B</div>
+          <div><span class="score" id="summB-score">0.0</span><span class="out-of"> / 10</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px" id="summB-raw">0 / 220</div>
+        </div>
+      </div>
+      <div class="chart-wrap" style="height:380px"><canvas id="compareRadar"></canvas></div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="exportComparePDF()">📄 Export Comparative PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 3 — RESULTS & CHARTS
+       ============================================================ -->
+  <div class="tab-panel" id="panel-charts">
+    <div style="margin-bottom:20px;color:var(--muted);font-size:14px">
+      Visualise the MCDA results for the jurisdiction you scored in the <strong>MCDA Tool</strong> tab.
+    </div>
+
+    <div class="chart-card">
+      <h3>Radar Chart — Performance Across 9 Criteria</h3>
+      <p class="chart-desc">Toggle scenarios to see how weighting affects each dimension.</p>
+      <div class="chart-controls">
+        <button class="btn" data-radar="A">Scenario A</button>
+        <button class="btn btn-primary" data-radar="B">Scenario B</button>
+        <button class="btn" data-radar="C">Scenario C</button>
+      </div>
+      <div class="chart-wrap"><canvas id="radarChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Bar Chart — Comparison Across Scenarios</h3>
+      <p class="chart-desc">See how the same scores yield different final results under each weighting scenario.</p>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 4 — DOCUMENTATION
+       ============================================================ -->
+  <div class="tab-panel" id="panel-docs">
+    <div class="doc-content">
+
+      <h2>What is MCDA?</h2>
+      <p>Multi-Criteria Decision Analysis (MCDA) is a structured methodology for evaluating complex decisions across multiple competing criteria. In this framework, it is applied to assess judicial AI systems across <strong>9 criteria</strong> and <strong>22 sub-indicators</strong>, providing a rigorous yet transparent way to compare readiness across jurisdictions.</p>
+      <p>Unlike single-metric evaluations, MCDA explicitly acknowledges trade-offs — for example, between efficiency gains and rights protection — and uses weighted aggregation to produce a composite score that reflects different value systems.</p>
+
+      <h2>The Three Weighting Scenarios</h2>
+      <p>Rather than imposing a single set of weights, this framework presents three scenarios to test robustness and surface the political nature of weighting choices.</p>
+
+      <div class="scenario-box">
+        <h4>Scenario A — Equal Weights</h4>
+        <p>All 9 criteria are weighted equally (≈11.1% each).</p>
+        <p><strong>Justification:</strong> Follows the CEPEJ (2022) principle of balanced evaluation across efficiency, rights, and accountability dimensions, ensuring no single value dominates assessment. Equal weighting is the standard MCDA baseline that avoids subjective bias (Belton &amp; Stewart, 2002).</p>
+      </div>
+
+      <div class="scenario-box">
+        <h4>Scenario B — Rights-Prioritising</h4>
+        <p>Criteria related to fundamental rights, transparency, and accountability receive higher weights.</p>
+        <p><strong>Justification:</strong> Aligned with EU AI Act (2024) Article 9 risk management requirements and Recital 47 on high-risk AI systems in justice. Reflects Pasquale's (2015) <em>Black Box Society</em> critique of opacity in automated decision-making, and anchors the framework in ECHR Article 6 and ICCPR Article 14 fair trial guarantees.</p>
+      </div>
+
+      <div class="scenario-box">
+        <h4>Scenario C — Effectiveness-Prioritising</h4>
+        <p>Criteria related to efficiency, accuracy, and implementation receive higher weights.</p>
+        <p><strong>Justification:</strong> Grounded in Rogers's (2003) <em>Diffusion of Innovations</em> theory and CEPEJ (2018) guidelines on efficiency in judicial systems. Reflects a pragmatic adoption perspective in which AI is justified only if it demonstrably improves justice delivery (Pawson &amp; Tilley, 1997; Fixsen et al., 2005).</p>
+      </div>
+
+      <h2>The 9 Criteria</h2>
+      <div class="crit-card"><strong>1. Political Will &amp; Institutional Readiness</strong> — Assesses political support, strategy, executive–judicial alignment, urgency, and budget commitment to judicial AI transformation.</div>
+      <div class="crit-card"><strong>2. Legal &amp; Regulatory Framework</strong> — Examines the scope of legislation, risk classification, oversight mechanisms, and accreditation standards for judicial AI.</div>
+      <div class="crit-card"><strong>3. Fundamental Rights of Litigants Protection</strong> — Evaluates fair trial guarantees, privacy and anti-bias safeguards, and human supervision over AI-assisted decisions.</div>
+      <div class="crit-card"><strong>4. Transparency</strong> — Measures technical disclosure, documentation, and public/research access to AI systems used in courts.</div>
+      <div class="crit-card"><strong>5. Technical Maturity</strong> — Assesses technological sophistication, reliability, and integration quality of AI systems deployed in the judicial domain.</div>
+      <div class="crit-card"><strong>6. Implementation</strong> — Examines operational status, scope of deployment, scaling plans, and availability of usage data.</div>
+      <div class="crit-card"><strong>7. Training &amp; Capacity Building</strong> — Evaluates the scope of training programs, resources, and certification for judicial staff working with AI.</div>
+      <div class="crit-card"><strong>8. Actual Impact</strong> — Measures documented efficiency gains, productivity improvements, and user/stakeholder satisfaction outcomes.</div>
+      <div class="crit-card"><strong>9. Equality &amp; Justice</strong> — Assesses access-widening design, stakeholder engagement in AI development, and bias monitoring with equity outcomes.</div>
+
+      <h2>Philosophical Framework</h2>
+      <ul>
+        <li><strong>Critical Realism (Bhaskar)</strong> — Recognises stratified reality: empirical observations, actual events, and underlying causal structures in judicial AI adoption.</li>
+        <li><strong>Legal Realism</strong> — Treats law as what courts and officials actually do, not only what statutes declare.</li>
+        <li><strong>Feminist Epistemology (Harding, Haraway, Collins)</strong> — Standpoint theory and situated knowledges foreground how AI systems encode particular (often gendered, racialised) perspectives.</li>
+        <li><strong>Nested Analysis (Lieberman 2005)</strong> — Combines large-N statistical analysis with in-depth case studies to cross-validate findings.</li>
+      </ul>
+
+      <h2>References</h2>
+      <ul class="ref-list">
+        <li>Belton, V. &amp; Stewart, T.J. (2002). <em>Multiple Criteria Decision Analysis: An Integrated Approach.</em> Springer.</li>
+        <li>CEPEJ (2018). <em>European Ethical Charter on the Use of AI in Judicial Systems and their Environment.</em></li>
+        <li>CEPEJ (2022). <em>Evaluation Report of European Judicial Systems.</em> Council of Europe.</li>
+        <li>EU Artificial Intelligence Act (2024). Regulation (EU) 2024/1689.</li>
+        <li>Fixsen, D.L. et al. (2005). <em>Implementation Research: A Synthesis of the Literature.</em></li>
+        <li>North, D.C. (1990). <em>Institutions, Institutional Change and Economic Performance.</em> Cambridge University Press.</li>
+        <li>Pasquale, F. (2015). <em>The Black Box Society.</em> Harvard University Press.</li>
+        <li>Pawson, R. &amp; Tilley, N. (1997). <em>Realistic Evaluation.</em> Sage.</li>
+        <li>Rogers, E.M. (2003). <em>Diffusion of Innovations</em> (5th ed.). Free Press.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TAB 5 — ABOUT
+       ============================================================ -->
+  <div class="tab-panel" id="panel-about">
+    <div class="about-grid">
+
+      <div class="about-card">
+        <h2>The Researcher</h2>
+        <div class="researcher-name">Fatima Al-Barrak</div>
+        <div style="color:var(--muted);font-size:14px;margin-bottom:10px">فاطمة البراك</div>
+        <p><strong>PhD Researcher</strong> | York Law School, University of York</p>
+        <p>Licensed Lawyer | Former Academic in Saudi Arabia</p>
+
+        <h3>Research Interests</h3>
+        <ul>
+          <li>AI in judicial systems</li>
+          <li>Comparative law</li>
+          <li>Postcolonial epistemology</li>
+          <li>Feminist legal theory</li>
+        </ul>
+
+        <h3>Published</h3>
+        <p>2023, 2025</p>
+
+        <h3>Contact</h3>
+        <div class="contact-line">📧 [email — to be updated]</div>
+        <div class="contact-line">🔗 GitHub: <a href="https://github.com/fatimbar" target="_blank" rel="noopener">fatimbar</a></div>
+        <div class="contact-line">🔗 LinkedIn: [to be updated]</div>
+      </div>
+
+      <div class="about-card">
+        <h2>The Research</h2>
+        <h3>Title</h3>
+        <p><em>Evaluating Judicial AI Readiness: A Multi-Criteria Decision Analysis Framework Across Legal Traditions</em></p>
+
+        <h3>Institution</h3>
+        <p>York Law School, University of York</p>
+
+        <h3>Stage</h3>
+        <p>First-year PhD (commenced 2025)</p>
+
+        <h3>Supervisors</h3>
+        <p>[to be updated]</p>
+
+        <h3>Abstract</h3>
+        <p>This research develops an MCDA framework comprising 9 criteria and 22 sub-indicators to evaluate the readiness of judicial systems to implement artificial intelligence. Through a comparative Global North/South lens, the framework is applied to three case studies: Singapore (Harvey AI), the United States (COMPAS), and Argentina (AymurAI). Drawing on Critical Realism, Legal Realism, and feminist epistemology, the research interrogates how judicial AI systems reproduce or challenge epistemic hierarchies across legal traditions.</p>
+
+        <h3>Case Studies</h3>
+        <ul>
+          <li>🇸🇬 <strong>Singapore</strong> — Harvey AI (pilot score: 160/220)</li>
+          <li>🇺🇸 <strong>USA</strong> — COMPAS (algorithmic risk assessment)</li>
+          <li>🇦🇷 <strong>Argentina</strong> — AymurAI (open-source judicial AI)</li>
+        </ul>
+
+        <h3>Presented at</h3>
+        <ul>
+          <li>Ways of Feminist Knowing PGR Conference, March 2026</li>
+          <li>BACL PhD Workshop, Sussex, May 2026 (accepted)</li>
+          <li>Riyadh International Philosophy Conference (fully funded)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CONTACT SECTION
+       ============================================================ -->
+  <section class="contact-section" id="contact">
+    <h2>Get in Touch</h2>
+    <p>Questions, collaboration proposals, or feedback on the framework are warmly welcomed.</p>
+    <div class="contact-links">
+      <a href="mailto:#">📧 Email</a>
+      <a href="https://github.com/fatimbar" target="_blank" rel="noopener">🔗 GitHub</a>
+      <a href="#">💼 LinkedIn</a>
+    </div>
+  </section>
+
 </div>
 
-<footer>FATI · YORK LAW SCHOOL · MCDA FRAMEWORK</footer>
-</div>
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="foot-title">FATI · YORK LAW SCHOOL · MCDA FRAMEWORK</div>
+  <div class="foot-meta">Last Updated: April 2026 | Work in Progress</div>
+  <div class="foot-meta">📧 [email] | GitHub: <a href="https://github.com/fatimbar" target="_blank" rel="noopener">fatimbar</a></div>
+  <div class="foot-disclaimer">⚠️ <strong>Disclaimer:</strong> This tool represents early-stage doctoral research and should not be used for operational judicial evaluation purposes.</div>
+  <div class="foot-copy">© 2026 Fatima Al-Barrak | York Law School</div>
+</footer>
 
 <script>
+/* =============================================================
+   DATA — 9 criteria, 22 sub-indicators (preserved from original)
+   ============================================================= */
 const data = [
   {cat:"Political and Institutional Environment", num:"Category One", colorClass:"c1", criteria:[
     {id:1, name:"Political Will & Institutional Readiness", subs:[
@@ -693,6 +1405,7 @@ const data = [
   ]}
 ];
 
+/* Weighting scenarios */
 const weights = {
   A: {1:11.1, 2:11.1, 3:11.1, 4:11.1, 5:11.1, 6:11.1, 7:11.1, 8:11.1, 9:11.2},
   B: {1:5,    2:20,   3:25,   4:10,   5:5,    6:5,    7:5,    8:12,   9:13},
@@ -705,15 +1418,61 @@ const scenarioDesc = {
 };
 
 const scoreValues = [10, 8, 6, 4, 2];
+const critNames = {1:"Political Will",2:"Legal Framework",3:"Fundamental Rights",4:"Transparency",5:"Technical Maturity",6:"Implementation",7:"Training",8:"Actual Impact",9:"Equality & Justice"};
+
+/* Flat list of 22 sub-indicators for Compare presets & iteration */
+const flatSubs = [];
+data.forEach(cat=>cat.criteria.forEach(crit=>{
+  crit.subs.forEach((sub,idx)=>{
+    flatSubs.push({critId:crit.id, critName:crit.name, subIdx:idx, subName:sub.name, key:`${crit.id}-${idx}`});
+  });
+}));
+
+/* Presets (22 scores each — order matches flatSubs) */
+const presets = {
+  singapore: {
+    name:"Singapore (Harvey AI)",
+    // 22 indicators — producing ~160/220 overall
+    scores:[10,10,10,8,  8,8,  8,8,8,  6,6,  10,8,  8,8,6,  8,6,  8,8,  6,6]
+  },
+  compas: {
+    name:"USA (COMPAS)",
+    // lower on rights/transparency, higher on implementation
+    scores:[8,6,6,6,  4,4,  4,2,2,  2,2,  8,8,  10,8,8,  6,4,  6,4,  2,2,2]
+  },
+  aymurai: {
+    name:"Argentina (AymurAI)",
+    // open-source, rights-oriented, smaller scale
+    scores:[6,6,8,4,  6,4,  8,8,6,  10,10,  6,4,  4,4,2,  4,4,  4,4,  10,10,10]
+  }
+};
+// Normalize preset length to exactly 22
+Object.keys(presets).forEach(k=>{
+  const arr = presets[k].scores;
+  while(arr.length < 22) arr.push(6);
+  presets[k].scores = arr.slice(0,22);
+});
+
+/* =============================================================
+   STATE
+   ============================================================= */
 const answers = {};
 const notes = {};
+const compareState = {
+  A: {name:"", scores:{}},
+  B: {name:"", scores:{}}
+};
+const STORAGE_KEY = "mcda-judicial-ai-v1";
 
+/* =============================================================
+   BUILD MAIN FORM
+   ============================================================= */
 const formEl = document.getElementById('form');
 data.forEach(category=>{
   const catDiv = document.createElement('div');
   catDiv.className = 'category';
   catDiv.innerHTML = `
-    <div class="cat-header ${category.colorClass}">
+    <div class="cat-header">
       <div class="cat-badge">${category.num.split(' ')[1][0]}</div>
       <div>
         <div class="cat-num">${category.num}</div>
@@ -742,7 +1501,7 @@ data.forEach(category=>{
           `).join('')}
         </div>
         <div class="notes-wrap">
-          <label>Notes & References</label>
+          <label>Notes &amp; References</label>
           <textarea data-key="${key}" placeholder="Add supporting evidence, sources, citations, or contextual notes for this score…"></textarea>
         </div>
       `;
@@ -752,9 +1511,9 @@ data.forEach(category=>{
   formEl.appendChild(catDiv);
 });
 
-let totalSubs = 0;
-data.forEach(c=>c.criteria.forEach(cr=>totalSubs+=cr.subs.length));
+let totalSubs = flatSubs.length;
 
+/* Score button click */
 document.querySelectorAll('.score-opt').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const key = btn.dataset.key;
@@ -763,13 +1522,21 @@ document.querySelectorAll('.score-opt').forEach(btn=>{
     document.querySelectorAll(`.score-opt[data-key="${key}"]`).forEach(b=>b.classList.remove('selected'));
     btn.classList.add('selected');
     updateProgress();
+    saveState();
   });
 });
 
+/* Notes input */
 document.querySelectorAll('textarea[data-key]').forEach(t=>{
-  t.addEventListener('input', ()=>{ notes[t.dataset.key] = t.value; });
+  t.addEventListener('input', ()=>{ notes[t.dataset.key] = t.value; saveState(); });
 });
 
+/* Country input save */
+document.getElementById('countryInput').addEventListener('input', saveState);
+
+/* =============================================================
+   PROGRESS & CALCULATION
+   ============================================================= */
 function updateProgress(){
   const done = Object.keys(answers).length;
   const pct = (done/totalSubs)*100;
@@ -780,34 +1547,37 @@ function updateProgress(){
     document.getElementById('resCountry').textContent = country;
     document.getElementById('results').style.display = 'block';
     calculate(currentScenario);
-    setTimeout(()=>document.getElementById('results').scrollIntoView({behavior:'smooth'}),300);
   }
 }
 
-function getCriterionScores(){
+function getCriterionScores(answerMap = answers){
   const out = {};
   data.forEach(cat=>cat.criteria.forEach(crit=>{
     let sum=0, count=0;
     crit.subs.forEach((_,sIdx)=>{
       const key = `${crit.id}-${sIdx}`;
-      if(answers[key]!==undefined){ sum+=answers[key]; count++; }
+      if(answerMap[key]!==undefined){ sum+=answerMap[key]; count++; }
     });
     out[crit.id] = count ? sum/count : 0;
   }));
   return out;
 }
 
+function calculateScenario(answerMap, scenario){
+  const critScores = getCriterionScores(answerMap);
+  const w = weights[scenario];
+  let weighted = 0;
+  Object.keys(w).forEach(id=>{ weighted += (critScores[id] * w[id]) / 100; });
+  return {weighted, critScores};
+}
+
 let currentScenario = 'A';
-const critNames = {1:"Political Will",2:"Legal Framework",3:"Fundamental Rights",4:"Transparency",5:"Technical Maturity",6:"Implementation",7:"Training",8:"Actual Impact",9:"Equality & Justice"};
 
 function calculate(scenario){
   currentScenario = scenario;
-  const critScores = getCriterionScores();
+  const {weighted, critScores} = calculateScenario(answers, scenario);
   const w = weights[scenario];
-  let weighted = 0;
-  Object.keys(w).forEach(id=>{
-    weighted += (critScores[id] * w[id]) / 100;
-  });
+
   document.getElementById('finalScore').textContent = weighted.toFixed(1);
   document.getElementById('sdesc').textContent = scenarioDesc[scenario];
 
@@ -832,8 +1602,13 @@ function calculate(scenario){
     `;
     bdList.appendChild(row);
   });
+
+  // Refresh charts if built
+  renderRadar();
+  renderBar();
 }
 
+/* Scenario tab buttons */
 document.querySelectorAll('.scenario-tabs button').forEach(b=>{
   b.addEventListener('click', ()=>{
     document.querySelectorAll('.scenario-tabs button').forEach(x=>x.classList.remove('active'));
@@ -842,7 +1617,303 @@ document.querySelectorAll('.scenario-tabs button').forEach(b=>{
   });
 });
 
-function exportReport(){
+/* =============================================================
+   TABS SWITCHING
+   ============================================================= */
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+name));
+  if(name==='charts'){ setTimeout(()=>{renderRadar(); renderBar();},50); }
+  if(name==='compare'){ setTimeout(renderCompareRadar, 50); }
+}
+document.querySelectorAll('.tab-btn').forEach(b=>{
+  b.addEventListener('click', ()=>switchTab(b.dataset.tab));
+});
+
+/* =============================================================
+   LOCALSTORAGE — save / load / clear
+   ============================================================= */
+function saveState(){
+  try{
+    const payload = {
+      country: document.getElementById('countryInput').value,
+      answers, notes,
+      compareState,
+      t: Date.now()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const p = JSON.parse(raw);
+    if(p.country) document.getElementById('countryInput').value = p.country;
+    if(p.answers){
+      Object.entries(p.answers).forEach(([key,val])=>{
+        answers[key] = val;
+        const btn = document.querySelector(`.score-opt[data-key="${key}"][data-score="${val}"]`);
+        if(btn) btn.classList.add('selected');
+      });
+    }
+    if(p.notes){
+      Object.entries(p.notes).forEach(([key,val])=>{
+        notes[key] = val;
+        const ta = document.querySelector(`textarea[data-key="${key}"]`);
+        if(ta) ta.value = val;
+      });
+    }
+    if(p.compareState){
+      Object.assign(compareState, p.compareState);
+      document.getElementById('compA-name').value = compareState.A.name || '';
+      document.getElementById('compB-name').value = compareState.B.name || '';
+    }
+    updateProgress();
+  }catch(e){ console.warn('Load state failed', e); }
+}
+function clearSaved(){
+  if(!confirm('Clear all saved data? This will erase your current assessment.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  resetAll();
+}
+
+/* =============================================================
+   RESET
+   ============================================================= */
+function resetAll(){
+  Object.keys(answers).forEach(k=>delete answers[k]);
+  Object.keys(notes).forEach(k=>delete notes[k]);
+  document.querySelectorAll('.score-opt.selected').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('textarea[data-key]').forEach(t=>t.value='');
+  document.getElementById('countryInput').value='';
+  document.getElementById('results').style.display = 'none';
+  updateProgress();
+  saveState();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* =============================================================
+   COMPARE TAB
+   ============================================================= */
+function buildCompareCol(side){
+  const container = document.getElementById(`comp${side}-scores`);
+  container.innerHTML = '';
+  flatSubs.forEach(sub=>{
+    const div = document.createElement('div');
+    div.className = 'compare-sub';
+    div.innerHTML = `
+      <div class="sub-label">${sub.critId}.${sub.subIdx+1} ${sub.subName}</div>
+      <select data-side="${side}" data-key="${sub.key}">
+        <option value="">—</option>
+        <option value="10">10 — Highest</option>
+        <option value="8">8 — High</option>
+        <option value="6">6 — Moderate</option>
+        <option value="4">4 — Low</option>
+        <option value="2">2 — None/Negative</option>
+      </select>
+    `;
+    container.appendChild(div);
+  });
+  // Event listeners
+  container.querySelectorAll('select').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const s = sel.dataset.side;
+      const k = sel.dataset.key;
+      if(sel.value === '') delete compareState[s].scores[k];
+      else compareState[s].scores[k] = parseFloat(sel.value);
+      updateCompareResult();
+      saveState();
+    });
+  });
+}
+
+function loadPreset(side, presetKey){
+  const preset = presets[presetKey];
+  if(!preset) return;
+  compareState[side].name = preset.name;
+  compareState[side].scores = {};
+  flatSubs.forEach((sub,i)=>{
+    compareState[side].scores[sub.key] = preset.scores[i];
+  });
+  document.getElementById(`comp${side}-name`).value = preset.name;
+  // Update selects
+  document.querySelectorAll(`#comp${side}-scores select`).forEach(sel=>{
+    const k = sel.dataset.key;
+    sel.value = compareState[side].scores[k] ?? '';
+  });
+  updateCompareResult();
+  saveState();
+}
+
+function clearCompare(side){
+  compareState[side] = {name:"", scores:{}};
+  document.getElementById(`comp${side}-name`).value = '';
+  document.querySelectorAll(`#comp${side}-scores select`).forEach(sel=>sel.value='');
+  updateCompareResult();
+  saveState();
+}
+
+document.getElementById('compA-name').addEventListener('input', e=>{compareState.A.name = e.target.value; updateCompareResult(); saveState();});
+document.getElementById('compB-name').addEventListener('input', e=>{compareState.B.name = e.target.value; updateCompareResult(); saveState();});
+
+function updateCompareResult(){
+  ['A','B'].forEach(side=>{
+    const nm = compareState[side].name || `Jurisdiction ${side}`;
+    document.getElementById(`summ${side}-name`).textContent = nm;
+    const {weighted} = calculateScenario(compareState[side].scores, 'A');
+    document.getElementById(`summ${side}-score`).textContent = weighted.toFixed(1);
+    // Raw total out of 220
+    const raw = Object.values(compareState[side].scores).reduce((a,b)=>a+b,0);
+    const count = Object.keys(compareState[side].scores).length;
+    document.getElementById(`summ${side}-raw`).textContent = `${raw} / 220  ·  ${count}/22 scored`;
+  });
+  renderCompareRadar();
+}
+
+/* =============================================================
+   CHARTS (Chart.js)
+   ============================================================= */
+let radarChartInst = null;
+let barChartInst = null;
+let compareRadarInst = null;
+let currentRadarScenario = 'B';
+
+document.querySelectorAll('[data-radar]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentRadarScenario = btn.dataset.radar;
+    document.querySelectorAll('[data-radar]').forEach(b=>{
+      b.classList.remove('btn-primary');
+    });
+    btn.classList.add('btn-primary');
+    renderRadar();
+  });
+});
+
+function renderRadar(){
+  const canvas = document.getElementById('radarChart');
+  if(!canvas) return;
+  const {critScores} = calculateScenario(answers, currentRadarScenario);
+  const labels = Object.keys(critNames).map(id=>critNames[id]);
+  const values = Object.keys(critNames).map(id=>critScores[id] || 0);
+
+  if(radarChartInst) radarChartInst.destroy();
+  radarChartInst = new Chart(canvas, {
+    type:'radar',
+    data:{
+      labels,
+      datasets:[{
+        label:`Score — Scenario ${currentRadarScenario}`,
+        data:values,
+        backgroundColor:'rgba(99,102,241,0.18)',
+        borderColor:'#6366F1',
+        borderWidth:2,
+        pointBackgroundColor:'#6366F1',
+        pointRadius:4
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        r:{
+          min:0,max:10,
+          ticks:{stepSize:2, color:'#94A3B8'},
+          grid:{color:'#E2E8F0'},
+          angleLines:{color:'#E2E8F0'},
+          pointLabels:{color:'#1E293B', font:{size:12, family:'Inter'}}
+        }
+      },
+      plugins:{legend:{labels:{color:'#1E293B'}}}
+    }
+  });
+}
+
+function renderBar(){
+  const canvas = document.getElementById('barChart');
+  if(!canvas) return;
+  const scenarios = ['A','B','C'];
+  const values = scenarios.map(s=>calculateScenario(answers, s).weighted);
+
+  if(barChartInst) barChartInst.destroy();
+  barChartInst = new Chart(canvas, {
+    type:'bar',
+    data:{
+      labels:['Scenario A · Equal','Scenario B · Rights','Scenario C · Effectiveness'],
+      datasets:[{
+        label:'Weighted Score /10',
+        data:values,
+        backgroundColor:['#6366F1','#0EA5E9','#10B981'],
+        borderRadius:8,
+        borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        y:{min:0,max:10,ticks:{color:'#94A3B8'},grid:{color:'#E2E8F0'}},
+        x:{ticks:{color:'#1E293B'},grid:{display:false}}
+      },
+      plugins:{legend:{display:false}}
+    }
+  });
+}
+
+function renderCompareRadar(){
+  const canvas = document.getElementById('compareRadar');
+  if(!canvas) return;
+  const labels = Object.keys(critNames).map(id=>critNames[id]);
+  const A = getCriterionScores(compareState.A.scores);
+  const B = getCriterionScores(compareState.B.scores);
+  const valsA = Object.keys(critNames).map(id=>A[id] || 0);
+  const valsB = Object.keys(critNames).map(id=>B[id] || 0);
+
+  if(compareRadarInst) compareRadarInst.destroy();
+  compareRadarInst = new Chart(canvas, {
+    type:'radar',
+    data:{
+      labels,
+      datasets:[
+        {
+          label: compareState.A.name || 'Jurisdiction A',
+          data: valsA,
+          backgroundColor:'rgba(99,102,241,0.18)',
+          borderColor:'#6366F1',
+          borderWidth:2,
+          pointBackgroundColor:'#6366F1'
+        },
+        {
+          label: compareState.B.name || 'Jurisdiction B',
+          data: valsB,
+          backgroundColor:'rgba(14,165,233,0.18)',
+          borderColor:'#0EA5E9',
+          borderWidth:2,
+          pointBackgroundColor:'#0EA5E9'
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        r:{
+          min:0,max:10,
+          ticks:{stepSize:2,color:'#94A3B8'},
+          grid:{color:'#E2E8F0'},
+          angleLines:{color:'#E2E8F0'},
+          pointLabels:{color:'#1E293B',font:{size:11,family:'Inter'}}
+        }
+      },
+      plugins:{legend:{labels:{color:'#1E293B'}}}
+    }
+  });
+}
+
+/* =============================================================
+   EXPORT — TXT, CSV, PDF, Comparative PDF
+   ============================================================= */
+function exportReportTxt(){
   const country = document.getElementById('countryInput').value.trim() || 'Unspecified Jurisdiction';
   const critScores = getCriterionScores();
   let txt = "JUDICIAL AI EVALUATION FRAMEWORK — MCDA REPORT\n";
@@ -851,11 +1922,9 @@ function exportReport(){
   txt += `Date: ${new Date().toLocaleDateString('en-GB')}\n\n`;
 
   ['A','B','C'].forEach(s=>{
-    const w = weights[s];
-    let total = 0;
-    Object.keys(w).forEach(id=>{ total += (critScores[id]*w[id])/100; });
+    const {weighted} = calculateScenario(answers, s);
     const sName = s==='A'?'Equal Weights':(s==='B'?'Rights-Prioritising':'Effectiveness-Prioritising');
-    txt += `Scenario ${s} (${sName}): ${total.toFixed(2)} / 10\n`;
+    txt += `Scenario ${s} (${sName}): ${weighted.toFixed(2)} / 10\n`;
   });
   txt += "\n"+"-".repeat(56)+"\nDETAILED SCORES & NOTES\n"+"-".repeat(56)+"\n\n";
 
@@ -873,27 +1942,291 @@ function exportReport(){
     });
   });
 
-  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  downloadFile(txt, `MCDA_Report_${country.replace(/[^a-z0-9]/gi,'_')}.txt`, 'text/plain');
+}
+
+function exportCSV(){
+  const country = document.getElementById('countryInput').value.trim() || 'Unspecified';
+  let csv = 'Criterion ID,Criterion Name,Sub-Indicator,Score (/10),Notes\n';
+  data.forEach(cat=>cat.criteria.forEach(crit=>{
+    crit.subs.forEach((sub,sIdx)=>{
+      const key = `${crit.id}-${sIdx}`;
+      const score = answers[key] ?? '';
+      const note = (notes[key] || '').replace(/"/g,'""');
+      csv += `${crit.id}.${sIdx+1},"${crit.name}","${sub.name}",${score},"${note}"\n`;
+    });
+  }));
+  csv += '\n';
+  csv += 'Scenario,Final Score /10\n';
+  ['A','B','C'].forEach(s=>{
+    const {weighted} = calculateScenario(answers, s);
+    csv += `Scenario ${s},${weighted.toFixed(2)}\n`;
+  });
+  downloadFile(csv, `MCDA_${country.replace(/[^a-z0-9]/gi,'_')}.csv`, 'text/csv');
+}
+
+function downloadFile(content, name, type){
+  const blob = new Blob([content], {type:type+';charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `MCDA_Report_${country.replace(/[^a-z0-9]/gi,'_')}.txt`;
-  a.click();
+  a.href = url; a.download = name; a.click();
   URL.revokeObjectURL(url);
 }
 
-function resetAll(){
-  Object.keys(answers).forEach(k=>delete answers[k]);
-  Object.keys(notes).forEach(k=>delete notes[k]);
-  document.querySelectorAll('.score-opt.selected').forEach(b=>b.classList.remove('selected'));
-  document.querySelectorAll('textarea[data-key]').forEach(t=>t.value='');
-  document.getElementById('countryInput').value='';
-  document.getElementById('results').style.display = 'none';
-  updateProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
+/* -------- PDF export (jsPDF) -------- */
+async function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  const country = document.getElementById('countryInput').value.trim() || 'Unspecified Jurisdiction';
+  const today = new Date().toLocaleDateString('en-GB');
+  let y = 20;
+
+  // Header
+  doc.setFillColor(99,102,241);
+  doc.rect(0,0,210,24,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(14);
+  doc.text('Judicial AI Evaluation Framework', 14, 12);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.text('MCDA Assessment Report', 14, 18);
+
+  y = 34;
+  doc.setTextColor(30,41,59);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text(`Jurisdiction: ${country}`, 14, y); y += 6;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.text(`Date: ${today}`, 14, y); y += 10;
+
+  // Scenario table
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.text('Results by Weighting Scenario', 14, y); y += 6;
+  doc.setDrawColor(226,232,240);
+  doc.setFillColor(248,250,252);
+  doc.rect(14, y, 182, 8, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
+  doc.text('Scenario', 18, y+5.5);
+  doc.text('Description', 60, y+5.5);
+  doc.text('Score /10', 170, y+5.5);
+  y += 8;
+  doc.setFont('helvetica','normal');
+  const sDescs = {A:'Equal Weights', B:'Rights-Prioritising', C:'Effectiveness-Prioritising'};
+  ['A','B','C'].forEach(s=>{
+    const {weighted} = calculateScenario(answers, s);
+    doc.rect(14, y, 182, 8);
+    doc.text(`Scenario ${s}`, 18, y+5.5);
+    doc.text(sDescs[s], 60, y+5.5);
+    doc.text(weighted.toFixed(2), 175, y+5.5);
+    y += 8;
+  });
+  y += 6;
+
+  // Try to add radar chart as image
+  try{
+    if(document.getElementById('panel-charts')){
+      // Ensure the charts tab is rendered once
+      renderRadar();
+      await new Promise(r=>setTimeout(r,200));
+      const canvas = document.getElementById('radarChart');
+      if(canvas){
+        const img = canvas.toDataURL('image/png');
+        if(y > 200){ doc.addPage(); y = 20; }
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(11);
+        doc.text(`Radar Chart — Scenario ${currentRadarScenario}`, 14, y); y += 4;
+        doc.addImage(img, 'PNG', 30, y, 150, 100);
+        y += 106;
+      }
+    }
+  }catch(e){ console.warn('Radar image failed', e); }
+
+  // Criterion breakdown
+  if(y > 230){ doc.addPage(); y = 20; }
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.text('Criterion Breakdown', 14, y); y += 6;
+  const critScores = getCriterionScores();
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  Object.keys(critNames).forEach(id=>{
+    if(y > 275){ doc.addPage(); y = 20; }
+    const sc = critScores[id].toFixed(1);
+    doc.text(`${id}. ${critNames[id]}`, 18, y);
+    doc.text(`${sc} / 10`, 170, y);
+    // bar
+    doc.setDrawColor(226,232,240);
+    doc.setFillColor(226,232,240);
+    doc.rect(18, y+1.5, 140, 2, 'F');
+    doc.setFillColor(99,102,241);
+    doc.rect(18, y+1.5, 140*(critScores[id]/10), 2, 'F');
+    y += 8;
+  });
+
+  // Detailed scores with notes
+  doc.addPage();
+  y = 20;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text('Detailed Scores & Evidence', 14, y); y += 8;
+  doc.setFontSize(9);
+  data.forEach(cat=>{
+    if(y>270){doc.addPage();y=20;}
+    doc.setFont('helvetica','bold');
+    doc.setTextColor(99,102,241);
+    doc.text(cat.cat, 14, y); y += 5;
+    doc.setTextColor(30,41,59);
+    cat.criteria.forEach(crit=>{
+      crit.subs.forEach((sub,sIdx)=>{
+        if(y>270){doc.addPage();y=20;}
+        const key = `${crit.id}-${sIdx}`;
+        const score = answers[key] ?? '—';
+        doc.setFont('helvetica','bold');
+        doc.text(`${crit.id}.${sIdx+1} ${sub.name}: ${score}/10`, 18, y); y += 4;
+        if(notes[key]){
+          doc.setFont('helvetica','italic');
+          const lines = doc.splitTextToSize(`Notes: ${notes[key]}`, 170);
+          lines.forEach(ln=>{
+            if(y>275){doc.addPage();y=20;}
+            doc.text(ln, 22, y); y += 4;
+          });
+        }
+        y += 2;
+      });
+    });
+    y += 2;
+  });
+
+  // Footer on every page
+  const pageCount = doc.internal.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(148,163,184);
+    doc.text('York Law School | Work in Progress | Early-Stage Research', 14, 290);
+    doc.text(`Page ${i} / ${pageCount}`, 180, 290);
+  }
+
+  doc.save(`MCDA_Report_${country.replace(/[^a-z0-9]/gi,'_')}.pdf`);
 }
 
+/* -------- Comparative PDF -------- */
+async function exportComparePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'mm', format:'a4'});
+  const today = new Date().toLocaleDateString('en-GB');
+  const nameA = compareState.A.name || 'Jurisdiction A';
+  const nameB = compareState.B.name || 'Jurisdiction B';
+
+  // Header
+  doc.setFillColor(99,102,241);
+  doc.rect(0,0,210,24,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(14);
+  doc.text('Judicial AI Evaluation Framework', 14, 12);
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.text('Comparative MCDA Report', 14, 18);
+
+  let y = 34;
+  doc.setTextColor(30,41,59);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text(`${nameA}  vs.  ${nameB}`, 14, y); y += 6;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.text(`Date: ${today}`, 14, y); y += 10;
+
+  // Scenario comparison table
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.text('Scores by Weighting Scenario', 14, y); y += 6;
+
+  doc.setFillColor(248,250,252);
+  doc.rect(14, y, 182, 8, 'F');
+  doc.setFontSize(10);
+  doc.text('Scenario', 18, y+5.5);
+  doc.text(nameA.substring(0,25), 80, y+5.5);
+  doc.text(nameB.substring(0,25), 140, y+5.5);
+  y += 8;
+  doc.setFont('helvetica','normal');
+  ['A','B','C'].forEach(s=>{
+    const a = calculateScenario(compareState.A.scores, s).weighted.toFixed(2);
+    const b = calculateScenario(compareState.B.scores, s).weighted.toFixed(2);
+    doc.rect(14,y,182,8);
+    doc.text(`Scenario ${s}`, 18, y+5.5);
+    doc.text(`${a} / 10`, 80, y+5.5);
+    doc.text(`${b} / 10`, 140, y+5.5);
+    y += 8;
+  });
+  y += 6;
+
+  // Radar
+  try{
+    renderCompareRadar();
+    await new Promise(r=>setTimeout(r,200));
+    const c = document.getElementById('compareRadar');
+    if(c){
+      const img = c.toDataURL('image/png');
+      doc.setFont('helvetica','bold');
+      doc.text('Radar Comparison', 14, y); y += 4;
+      doc.addImage(img, 'PNG', 30, y, 150, 100);
+      y += 106;
+    }
+  }catch(e){}
+
+  // Criterion side-by-side
+  doc.addPage();
+  y = 20;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12);
+  doc.text('Side-by-Side Criterion Breakdown', 14, y); y += 8;
+
+  const scoresA = getCriterionScores(compareState.A.scores);
+  const scoresB = getCriterionScores(compareState.B.scores);
+  doc.setFontSize(10);
+  doc.setFillColor(248,250,252);
+  doc.rect(14, y, 182, 8, 'F');
+  doc.text('Criterion', 18, y+5.5);
+  doc.text(nameA.substring(0,20), 110, y+5.5);
+  doc.text(nameB.substring(0,20), 160, y+5.5);
+  y += 8;
+  doc.setFont('helvetica','normal');
+  Object.keys(critNames).forEach(id=>{
+    if(y>275){doc.addPage();y=20;}
+    doc.rect(14,y,182,8);
+    doc.text(`${id}. ${critNames[id]}`, 18, y+5.5);
+    doc.text(`${scoresA[id].toFixed(1)}`, 115, y+5.5);
+    doc.text(`${scoresB[id].toFixed(1)}`, 165, y+5.5);
+    y += 8;
+  });
+
+  // Footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(148,163,184);
+    doc.text('York Law School | Work in Progress | Early-Stage Research', 14, 290);
+    doc.text(`Page ${i} / ${pageCount}`, 180, 290);
+  }
+
+  doc.save(`MCDA_Comparative_${nameA.replace(/[^a-z0-9]/gi,'_')}_vs_${nameB.replace(/[^a-z0-9]/gi,'_')}.pdf`);
+}
+
+/* =============================================================
+   INITIALISE
+   ============================================================= */
+buildCompareCol('A');
+buildCompareCol('B');
+loadState();
 updateProgress();
+updateCompareResult();
 </script>
 </body>
 </html>
