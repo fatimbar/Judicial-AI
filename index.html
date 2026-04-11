@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Judicial AI Evaluation Framework — MCDA</title>
-<meta name="description" content="Multi-Criteria Decision Analysis framework for evaluating judicial AI readiness. PhD research by Fatima Al-Barrak, York Law School.">
+<meta name="description" content="Multi-Criteria Decision Analysis framework for evaluating judicial AI readiness. PhD research by Fatimah Barnawi, York Law School.">
+<meta name="author" content="Fatimah Barnawi">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Chart.js for radar & bar charts -->
@@ -247,6 +248,9 @@ button{font-family:inherit;cursor:pointer}
    PROGRESS BAR
    ========================================================== */
 .progress-bar{
+  position:sticky;
+  top:72px;
+  z-index:50;
   background:var(--surface);
   border:1px solid var(--border);
   border-radius:var(--radius);
@@ -254,7 +258,7 @@ button{font-family:inherit;cursor:pointer}
   margin-bottom:28px;
   display:flex;align-items:center;gap:18px;
   font-size:13px;font-weight:600;
-  box-shadow:var(--shadow-sm);
+  box-shadow:var(--shadow);
 }
 .progress-track{
   flex:1;height:8px;
@@ -891,8 +895,8 @@ footer .foot-copy{
     <ul class="nav-links">
       <li><a href="#home">Home</a></li>
       <li><a href="#framework-map" onclick="switchTab('tool')">Framework Map</a></li>
-      <li><a href="#framework-map" onclick="switchTab('tool')">MCDA Tool</a></li>
-      <li><a href="#framework-map" onclick="switchTab('docs')">Documentation</a></li>
+      <li><a href="#mcda-tool" onclick="switchTab('tool')">MCDA Tool</a></li>
+      <li><a href="#documentation" onclick="switchTab('docs')">Documentation</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
   </div>
@@ -906,7 +910,7 @@ footer .foot-copy{
   <div class="hero">
     <span class="eyebrow">Multi-Criteria Decision Analysis</span>
     <h1>Judicial AI <em>Evaluation</em> Framework</h1>
-    <p class="lead">An interactive assessment built on MCDA methodology — score 22 sub-indicators across 9 criteria, document your evidence, and explore results under three weighting scenarios.</p>
+    <p class="lead">An interactive assessment built on MCDA methodology — score 23 sub-indicators across 9 criteria, document your evidence, and explore results under three weighting scenarios.</p>
   </div>
 
   <!-- ============================================================
@@ -924,6 +928,7 @@ footer .foot-copy{
        TAB 1 — MCDA TOOL
        ============================================================ -->
   <div class="tab-panel active" id="panel-tool">
+    <span id="mcda-tool" style="display:block;position:relative;top:-80px;visibility:hidden"></span>
 
     <div class="country-panel">
       <label for="countryInput">Jurisdiction Under Assessment</label>
@@ -938,7 +943,7 @@ footer .foot-copy{
     <div class="progress-bar">
       <span class="progress-text">PROGRESS</span>
       <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
-      <span class="progress-text" id="ptext">0 / 22</span>
+      <span class="progress-text" id="ptext">0 / 23</span>
     </div>
 
     <div id="form"></div>
@@ -1015,12 +1020,12 @@ footer .foot-copy{
         <div class="summary-card">
           <div class="name" id="summA-name">Jurisdiction A</div>
           <div><span class="score" id="summA-score">0.0</span><span class="out-of"> / 10</span></div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px" id="summA-raw">0 / 220</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px" id="summA-raw">0 / 230</div>
         </div>
         <div class="summary-card">
           <div class="name" id="summB-name">Jurisdiction B</div>
           <div><span class="score" id="summB-score">0.0</span><span class="out-of"> / 10</span></div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px" id="summB-raw">0 / 220</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px" id="summB-raw">0 / 230</div>
         </div>
       </div>
       <div class="chart-wrap" style="height:380px"><canvas id="compareRadar"></canvas></div>
@@ -1060,10 +1065,11 @@ footer .foot-copy{
        TAB 4 — DOCUMENTATION
        ============================================================ -->
   <div class="tab-panel" id="panel-docs">
+    <span id="documentation" style="display:block;position:relative;top:-80px;visibility:hidden"></span>
     <div class="doc-content">
 
       <h2>What is MCDA?</h2>
-      <p>Multi-Criteria Decision Analysis (MCDA) is a structured methodology for evaluating complex decisions across multiple competing criteria. In this framework, it is applied to assess judicial AI systems across <strong>9 criteria</strong> and <strong>22 sub-indicators</strong>, providing a rigorous yet transparent way to compare readiness across jurisdictions.</p>
+      <p>Multi-Criteria Decision Analysis (MCDA) is a structured methodology for evaluating complex decisions across multiple competing criteria. In this framework, it is applied to assess judicial AI systems across <strong>9 criteria</strong> and <strong>23 sub-indicators</strong>, providing a rigorous yet transparent way to compare readiness across jurisdictions.</p>
       <p>Unlike single-metric evaluations, MCDA explicitly acknowledges trade-offs — for example, between efficiency gains and rights protection — and uses weighted aggregation to produce a composite score that reflects different value systems.</p>
 
       <h2>The Three Weighting Scenarios</h2>
@@ -1129,8 +1135,9 @@ footer .foot-copy{
 
       <div class="about-card">
         <h2>The Researcher</h2>
-        <div class="researcher-name">Fatima Al-Barrak</div>
-        <div style="color:var(--muted);font-size:14px;margin-bottom:10px">فاطمة البراك</div>
+        <div class="researcher-name">Fatimah Barnawi</div>
+        <div style="color:var(--muted);font-size:14px;margin-bottom:14px">فاطمة البرناوي</div>
+        <p style="margin-bottom:14px">I bring a blend of experience from both academia and legal practice, having spent several years as a practicing attorney before transitioning into an academic role. My primary interest lies at the intersection of technology and law. My work focuses on areas such as the digital transformation of legal practice, innovation, and entrepreneurship. I am dedicated to giving back to my community wherever I can.</p>
         <p><strong>PhD Researcher</strong> | York Law School, University of York</p>
         <p>Licensed Lawyer | Former Academic in Saudi Arabia</p>
 
@@ -1143,12 +1150,13 @@ footer .foot-copy{
         </ul>
 
         <h3>Published</h3>
-        <p>2023, 2025</p>
+        <p>Barnawi, F.A. (2025). "Judicial Decision-Making in Personal Injury Cases: A Comprehensive Analysis of Factors, Constraints, and Theoretical Frameworks." <em>Journal of Economic, Administrative and Legal Sciences</em>, 9(12), pp.&nbsp;116–127. <a href="https://doi.org/10.26389/AJSRP.B240225" target="_blank" rel="noopener">https://doi.org/10.26389/AJSRP.B240225</a></p>
 
         <h3>Contact</h3>
-        <div class="contact-line">📧 [email — to be updated]</div>
+        <div class="contact-line">📧 <a href="mailto:fbarnawi@kku.edu.sa">fbarnawi@kku.edu.sa</a></div>
+        <div class="contact-line">📧 <a href="mailto:ggg543@york.ac.uk">ggg543@york.ac.uk</a></div>
         <div class="contact-line">🔗 GitHub: <a href="https://github.com/fatimbar" target="_blank" rel="noopener">fatimbar</a></div>
-        <div class="contact-line">🔗 LinkedIn: [to be updated]</div>
+        <div class="contact-line">🔗 LinkedIn: <a href="https://www.linkedin.com/in/fatimah-barnawi-13303a128" target="_blank" rel="noopener">LinkedIn Profile</a></div>
       </div>
 
       <div class="about-card">
@@ -1166,20 +1174,13 @@ footer .foot-copy{
         <p>[to be updated]</p>
 
         <h3>Abstract</h3>
-        <p>This research develops an MCDA framework comprising 9 criteria and 22 sub-indicators to evaluate the readiness of judicial systems to implement artificial intelligence. Through a comparative Global North/South lens, the framework is applied to three case studies: Singapore (Harvey AI), the United States (COMPAS), and Argentina (AymurAI). Drawing on Critical Realism, Legal Realism, and feminist epistemology, the research interrogates how judicial AI systems reproduce or challenge epistemic hierarchies across legal traditions.</p>
+        <p>This research develops an MCDA framework comprising 9 criteria and 23 sub-indicators to evaluate the readiness of judicial systems to implement artificial intelligence. Through a comparative Global North/South lens, the framework is applied to three case studies: Singapore (Harvey AI), the United States (COMPAS), and Argentina (AymurAI). Drawing on Critical Realism, Legal Realism, and feminist epistemology, the research interrogates how judicial AI systems reproduce or challenge epistemic hierarchies across legal traditions.</p>
 
         <h3>Case Studies</h3>
         <ul>
-          <li>🇸🇬 <strong>Singapore</strong> — Harvey AI (pilot score: 160/220)</li>
+          <li>🇸🇬 <strong>Singapore</strong> — Harvey AI (pilot score: 160/230)</li>
           <li>🇺🇸 <strong>USA</strong> — COMPAS (algorithmic risk assessment)</li>
           <li>🇦🇷 <strong>Argentina</strong> — AymurAI (open-source judicial AI)</li>
-        </ul>
-
-        <h3>Presented at</h3>
-        <ul>
-          <li>Ways of Feminist Knowing PGR Conference, March 2026</li>
-          <li>BACL PhD Workshop, Sussex, May 2026 (accepted)</li>
-          <li>Riyadh International Philosophy Conference (fully funded)</li>
         </ul>
       </div>
     </div>
@@ -1192,9 +1193,9 @@ footer .foot-copy{
     <h2>Get in Touch</h2>
     <p>Questions, collaboration proposals, or feedback on the framework are warmly welcomed.</p>
     <div class="contact-links">
-      <a href="mailto:#">📧 Email</a>
+      <a href="mailto:fbarnawi@kku.edu.sa">📧 Email</a>
       <a href="https://github.com/fatimbar" target="_blank" rel="noopener">🔗 GitHub</a>
-      <a href="#">💼 LinkedIn</a>
+      <a href="https://www.linkedin.com/in/fatimah-barnawi-13303a128" target="_blank" rel="noopener">💼 LinkedIn</a>
     </div>
   </section>
 
@@ -1206,14 +1207,14 @@ footer .foot-copy{
 <footer>
   <div class="foot-title">FATI · YORK LAW SCHOOL · MCDA FRAMEWORK</div>
   <div class="foot-meta">Last Updated: April 2026 | Work in Progress</div>
-  <div class="foot-meta">📧 [email] | GitHub: <a href="https://github.com/fatimbar" target="_blank" rel="noopener">fatimbar</a></div>
+  <div class="foot-meta">📧 <a href="mailto:fbarnawi@kku.edu.sa">fbarnawi@kku.edu.sa</a> | GitHub: <a href="https://github.com/fatimbar" target="_blank" rel="noopener">fatimbar</a></div>
   <div class="foot-disclaimer">⚠️ <strong>Disclaimer:</strong> This tool represents early-stage doctoral research and should not be used for operational judicial evaluation purposes.</div>
-  <div class="foot-copy">© 2026 Fatima Al-Barrak | York Law School</div>
+  <div class="foot-copy">© 2026 Fatimah Barnawi | York Law School</div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 /* =============================================================
-   DATA — 9 criteria, 22 sub-indicators (preserved from original)
+   DATA — 9 criteria, 23 sub-indicators (preserved from original)
    ============================================================= */
 const data = [
   {cat:"Political and Institutional Environment", num:"Category One", colorClass:"c1", criteria:[
@@ -1420,7 +1421,7 @@ const scenarioDesc = {
 const scoreValues = [10, 8, 6, 4, 2];
 const critNames = {1:"Political Will",2:"Legal Framework",3:"Fundamental Rights",4:"Transparency",5:"Technical Maturity",6:"Implementation",7:"Training",8:"Actual Impact",9:"Equality & Justice"};
 
-/* Flat list of 22 sub-indicators for Compare presets & iteration */
+/* Flat list of 23 sub-indicators for Compare presets & iteration */
 const flatSubs = [];
 data.forEach(cat=>cat.criteria.forEach(crit=>{
   crit.subs.forEach((sub,idx)=>{
@@ -1428,12 +1429,12 @@ data.forEach(cat=>cat.criteria.forEach(crit=>{
   });
 }));
 
-/* Presets (22 scores each — order matches flatSubs) */
+/* Presets (23 scores each — order matches flatSubs) */
 const presets = {
   singapore: {
     name:"Singapore (Harvey AI)",
-    // 22 indicators — producing ~160/220 overall
-    scores:[10,10,10,8,  8,8,  8,8,8,  6,6,  10,8,  8,8,6,  8,6,  8,8,  6,6]
+    // 23 indicators — producing ~160/230 overall
+    scores:[10,10,10,8,  8,8,  8,8,8,  6,6,  10,8,  8,8,6,  8,6,  8,8,  6,6,6]
   },
   compas: {
     name:"USA (COMPAS)",
@@ -1446,11 +1447,11 @@ const presets = {
     scores:[6,6,8,4,  6,4,  8,8,6,  10,10,  6,4,  4,4,2,  4,4,  4,4,  10,10,10]
   }
 };
-// Normalize preset length to exactly 22
+// Normalize preset length to exactly 23
 Object.keys(presets).forEach(k=>{
   const arr = presets[k].scores;
-  while(arr.length < 22) arr.push(6);
-  presets[k].scores = arr.slice(0,22);
+  while(arr.length < 23) arr.push(6);
+  presets[k].scores = arr.slice(0,23);
 });
 
 /* =============================================================
@@ -1766,7 +1767,7 @@ function updateCompareResult(){
     // Raw total out of 220
     const raw = Object.values(compareState[side].scores).reduce((a,b)=>a+b,0);
     const count = Object.keys(compareState[side].scores).length;
-    document.getElementById(`summ${side}-raw`).textContent = `${raw} / 220  ·  ${count}/22 scored`;
+    document.getElementById(`summ${side}-raw`).textContent = `${raw} / 230  ·  ${count}/23 scored`;
   });
   renderCompareRadar();
 }
